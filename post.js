@@ -125,7 +125,12 @@ var superSphincs	= {
 	keyPair: function (callback) {
 		var sphincsKeyPair	= sphincs.keyPair();
 
-		rsa.keyPair(function (rsaKeyPair) {
+		rsa.keyPair(function (rsaKeyPair, err) {
+			if (err) {
+				callback(null, superSphincs.errorMessages.keyPair);
+				return;
+			}
+
 			var keyPair	= {
 				publicKey: new Uint8Array(superSphincs.publicKeyLength),
 				privateKey: new Uint8Array(superSphincs.privateKeyLength)
@@ -151,7 +156,7 @@ var superSphincs	= {
 			new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
 			function (rsaSignature, err) {
 				if (err) {
-					callback(null, superSphincs.errorMessages.keyPair);
+					callback(null, superSphincs.errorMessages.sign);
 					return;
 				}
 
