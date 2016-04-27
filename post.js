@@ -47,6 +47,14 @@ function exportJWK (key, callback) {
 	}
 }
 
+function hashMessage (message) {
+	return from_hex(sha512(
+		typeof message === 'string' ?
+			message :
+			to_string(message)
+	));
+}
+
 var rsa	= {
 	algorithm: isNode ?
 		'RSA-SHA256' :
@@ -195,40 +203,33 @@ var superSphincs	= {
 	},
 
 	sign: function (message, privateKey, callback) {
-		var sphincsSigned	= sphincs.sign(
-			message,
-			new Uint8Array(privateKey.buffer, rsa.privateKeyLength)
-		);
-
-		rsa.signDetached(
-			message,
-			new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
-			function (rsaSignature, err) {
-				if (err) {
-					callback(null, superSphincs.errorMessages.sign);
-					return;
-				}
-
+		superSphincs.signDetached(message, privateKey, function (signature, err) {
+			if (signature) {
 				var signed	= new Uint8Array(
-					rsa.signatureLength + sphincsSigned.length
+					superSphincs.signatureLength + message.length
 				);
 
-				signed.set(rsaSignature);
-				signed.set(sphincsSigned, rsa.signatureLength);
+				signed.set(signature);
+				signed.set(message, superSphincs.signatureLength);
 
 				callback(signed);
 			}
-		);
+			else {
+				callback(null, err);
+			}
+		});
 	},
 
 	signDetached: function (message, privateKey, callback) {
+		var hash	= hashMessage(message);
+
 		var sphincsSignature	= sphincs.signDetached(
-			message,
+			hash,
 			new Uint8Array(privateKey.buffer, rsa.privateKeyLength)
 		);
 
 		rsa.signDetached(
-			message,
+			hash,
 			new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
 			function (rsaSignature, err) {
 				if (err) {
@@ -261,15 +262,17 @@ var superSphincs	= {
 	},
 
 	verifyDetached: function (signature, message, publicKey, callback) {
+		var hash	= hashMessage(message);
+
 		var sphincsIsValid	= sphincs.verifyDetached(
 			new Uint8Array(signature.buffer, rsa.signatureLength),
-			message,
+			hash,
 			new Uint8Array(publicKey.buffer, rsa.publicKeyLength)
 		);
 
 		rsa.verifyDetached(
 			new Uint8Array(signature.buffer, 0, rsa.signatureLength),
-			message,
+			hash,
 			new Uint8Array(publicKey.buffer, 0, rsa.publicKeyLength),
 			function (rsaIsValid, err) {
 				if (err) {
