@@ -21,7 +21,7 @@ function importJWK (key, purpose, callback) {
 			false,
 			[purpose]
 		).then(callback).catch(function () {
-			callback(null, 'Failed to import key.');
+			callback(null, null, 'Failed to import key.');
 		});
 	}
 }
@@ -42,7 +42,7 @@ function exportJWK (key, callback) {
 		).then(function (jwk) {
 			returnJWK(jwk);
 		}).catch(function () {
-			callback(null, 'Failed to export key.');
+			callback(null, null, 'Failed to export key.');
 		});
 	}
 }
@@ -76,7 +76,8 @@ function getMessageText (message) {
 }
 
 function hashMessage (message) {
-	return from_hex(sha512(getMessageText(message)));
+	var hex	= sha512(getMessageText(message));
+	return {bytes: from_hex(hex), hex: hex};
 }
 
 
@@ -100,7 +101,7 @@ var rsa	= {
 	errorMessages: {
 		keyPair: 'Failed to generate RSA key pair.',
 		signDetached: 'Failed to generate RSA signature.',
-		verifyDetached: 'Failed to verify RSA signature.'
+		verifyDetached: 'Failed to attempt to verify RSA signature.'
 	},
 
 	keyPair: function (callback) {
@@ -133,12 +134,12 @@ var rsa	= {
 					true,
 					['sign', 'verify']
 				).then(returnKeyPair).catch(function () {
-					callback(null, rsa.errorMessages.keyPair);
+					callback(null, null, rsa.errorMessages.keyPair);
 				});
 			}
 		}
 		catch (_) {
-			callback(null, rsa.errorMessages.keyPair);
+			callback(null, null, rsa.errorMessages.keyPair);
 		}
 	},
 
@@ -156,14 +157,14 @@ var rsa	= {
 						then(function (signature) {
 							callback(new Uint8Array(signature));
 						}).catch(function () {
-							callback(null, rsa.errorMessages.signDetached);
+							callback(null, null, rsa.errorMessages.signDetached);
 						})
 					;
 				}
 			});
 		}
 		catch (_) {
-			callback(null, rsa.errorMessages.signDetached);
+			callback(null, null, rsa.errorMessages.signDetached);
 		}
 	},
 
@@ -180,14 +181,14 @@ var rsa	= {
 						then(function (isValid) {
 							callback(isValid);
 						}).catch(function () {
-							callback(null, rsa.errorMessages.verifyDetached);
+							callback(null, null, rsa.errorMessages.verifyDetached);
 						})
 					;
 				}
 			});
 		}
 		catch (_) {
-			callback(null, rsa.errorMessages.verifyDetached);
+			callback(null, null, rsa.errorMessages.verifyDetached);
 		}
 	}
 };
@@ -201,130 +202,165 @@ var superSphincs	= {
 	errorMessages: {
 		keyPair: 'Failed to generate SuperSPHINCS key pair.',
 		sign: 'Failed to generate SuperSPHINCS signature.',
-		open: 'Failed to open SuperSPHINCS signed message.'
+		open: 'Failed to open SuperSPHINCS signed message.',
+		verify: 'Failed to attempt to verify SuperSPHINCS signature.'
 	},
 
 	keyPair: function (callback) {
-		var sphincsKeyPair	= sphincs.keyPair();
+		try {
+			var sphincsKeyPair	= sphincs.keyPair();
 
-		rsa.keyPair(function (rsaKeyPair, err) {
-			if (err) {
-				callback(null, superSphincs.errorMessages.keyPair);
-				return;
-			}
-
-			var keyPair	= {
-				publicKey: new Uint8Array(superSphincs.publicKeyLength),
-				privateKey: new Uint8Array(superSphincs.privateKeyLength)
-			};
-
-			keyPair.publicKey.set(rsaKeyPair.publicKey);
-			keyPair.privateKey.set(rsaKeyPair.privateKey);
-			keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyLength);
-			keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyLength);
-
-			callback(keyPair);
-		});
-	},
-
-	sign: function (message, privateKey, callback) {
-		superSphincs.signDetached(message, privateKey, function (signature, err) {
-			if (signature) {
-				message		= getMessageBytes(message);
-
-				var signed	= new Uint8Array(
-					superSphincs.signatureLength + message.length
-				);
-
-				signed.set(signature);
-				signed.set(message, superSphincs.signatureLength);
-
-				callback(encodeSignature(signed));
-			}
-			else {
-				callback(null, err);
-			}
-		}, true);
-	},
-
-	signDetached: function (message, privateKey, callback, noEncode) {
-		var hash	= hashMessage(message);
-
-		var sphincsSignature	= sphincs.signDetached(
-			hash,
-			new Uint8Array(privateKey.buffer, rsa.privateKeyLength)
-		);
-
-		rsa.signDetached(
-			hash,
-			new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
-			function (rsaSignature, err) {
+			rsa.keyPair(function (rsaKeyPair, err) {
 				if (err) {
-					callback(null, superSphincs.errorMessages.sign);
+					callback(null, superSphincs.errorMessages.keyPair);
 					return;
 				}
 
-				var signature	= new Uint8Array(superSphincs.signatureLength);
+				var keyPair	= {
+					publicKey: new Uint8Array(superSphincs.publicKeyLength),
+					privateKey: new Uint8Array(superSphincs.privateKeyLength)
+				};
 
-				signature.set(rsaSignature);
-				signature.set(sphincsSignature, rsa.signatureLength);
+				keyPair.publicKey.set(rsaKeyPair.publicKey);
+				keyPair.privateKey.set(rsaKeyPair.privateKey);
+				keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyLength);
+				keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyLength);
 
-				if (noEncode) {
-					callback(signature);
+				callback(keyPair);
+			});
+		}
+		catch (_) {
+			callback(null, superSphincs.errorMessages.keyPair);
+		}
+	},
+
+	sign: function (message, privateKey, callback) {
+		superSphincs.signDetached(
+			message,
+			privateKey,
+			function (signature, hash, err) {
+				if (signature) {
+					message		= getMessageBytes(message);
+
+					var signed	= new Uint8Array(
+						superSphincs.signatureLength + message.length
+					);
+
+					signed.set(signature);
+					signed.set(message, superSphincs.signatureLength);
+
+					callback(encodeSignature(signed), hash.hex);
 				}
 				else {
-					callback(encodeSignature(signature));
+					callback(null, null, err);
 				}
-			}
+			},
+			true
 		);
+	},
+
+	signDetached: function (message, privateKey, callback, noEncode) {
+		try {
+			var hash	= hashMessage(message);
+
+			var sphincsSignature	= sphincs.signDetached(
+				hash.bytes,
+				new Uint8Array(privateKey.buffer, rsa.privateKeyLength)
+			);
+
+			rsa.signDetached(
+				hash.bytes,
+				new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
+				function (rsaSignature, err) {
+					if (err) {
+						callback(null, null, superSphincs.errorMessages.sign);
+						return;
+					}
+
+					var signature	= new Uint8Array(superSphincs.signatureLength);
+
+					signature.set(rsaSignature);
+					signature.set(sphincsSignature, rsa.signatureLength);
+
+					if (noEncode) {
+						callback(signature, hash);
+					}
+					else {
+						callback(encodeSignature(signature), hash.hex);
+					}
+				}
+			);
+		}
+		catch (_) {
+			callback(null, null, superSphincs.errorMessages.sign);
+		}
 	},
 
 	open: function (signed, publicKey, callback) {
-		signed	= decodeSignature(signed);
+		try {
+			signed	= decodeSignature(signed);
 
-		var signature	= new Uint8Array(signed.buffer, 0, superSphincs.signatureLength);
+			var signature	= new Uint8Array(
+				signed.buffer,
+				0,
+				superSphincs.signatureLength
+			);
 
-		var message		= getMessageText(
-			new Uint8Array(signed.buffer, superSphincs.signatureLength)
-		);
+			var message		= getMessageText(
+				new Uint8Array(signed.buffer, superSphincs.signatureLength)
+			);
 
-		superSphincs.verifyDetached(signature, message, publicKey, function (isValid) {
-			if (isValid) {
-				callback(message);
-			}
-			else {
-				callback(null, superSphincs.errorMessages.open);
-			}
-		});
+			superSphincs.verifyDetached(
+				signature,
+				message,
+				publicKey,
+				function (isValid, messageHash) {
+					if (isValid) {
+						callback(message, messageHash);
+					}
+					else {
+						callback(null, null, superSphincs.errorMessages.open);
+					}
+				}
+			);
+		}
+		catch (_) {
+			callback(null, null, superSphincs.errorMessages.open);
+		}
 	},
 
 	verifyDetached: function (signature, message, publicKey, callback) {
-		signature	= decodeSignature(signature);
+		try {
+			signature	= decodeSignature(signature);
 
-		var hash	= hashMessage(message);
+			var hash	= hashMessage(message);
 
-		var sphincsIsValid	= sphincs.verifyDetached(
-			new Uint8Array(
-				signature.buffer,
-				rsa.signatureLength,
-				sphincs.signatureLength
-			),
-			hash,
-			new Uint8Array(publicKey.buffer, rsa.publicKeyLength)
-		);
+			var sphincsIsValid	= sphincs.verifyDetached(
+				new Uint8Array(
+					signature.buffer,
+					rsa.signatureLength,
+					sphincs.signatureLength
+				),
+				hash.bytes,
+				new Uint8Array(publicKey.buffer, rsa.publicKeyLength)
+			);
 
-		rsa.verifyDetached(
-			new Uint8Array(signature.buffer, 0, rsa.signatureLength),
-			hash,
-			new Uint8Array(publicKey.buffer, 0, rsa.publicKeyLength),
-			function (rsaIsValid, err) {
-				if (err) {
-					rsaIsValid	= true;
+			rsa.verifyDetached(
+				new Uint8Array(signature.buffer, 0, rsa.signatureLength),
+				hash.bytes,
+				new Uint8Array(publicKey.buffer, 0, rsa.publicKeyLength),
+				function (rsaIsValid, err) {
+					if (err) {
+						rsaIsValid	= true;
+					}
+
+					callback(rsaIsValid && sphincsIsValid, hash.hex);
 				}
-
-				callback(rsaIsValid && sphincsIsValid);
-			}
-		);
+			);
+		}
+		catch (_) {
+			callback(null, null, superSphincs.errorMessages.verify);
+		}
 	}
 };
 
