@@ -47,12 +47,22 @@ function exportJWK (key, callback) {
 	}
 }
 
+function getMessageBytes (message) {
+	return typeof message === 'string' ?
+		from_string(message) :
+		message
+	;
+}
+
+function getMessageText (message) {
+	return typeof message === 'string' ?
+		message :
+		to_string(message)
+	;
+}
+
 function hashMessage (message) {
-	return from_hex(sha512(
-		typeof message === 'string' ?
-			message :
-			to_string(message)
-	));
+	return from_hex(sha512(getMessageText(message)));
 }
 
 var rsa	= {
@@ -205,12 +215,14 @@ var superSphincs	= {
 	sign: function (message, privateKey, callback) {
 		superSphincs.signDetached(message, privateKey, function (signature, err) {
 			if (signature) {
+				var messageBytes	= getMessageBytes(message);
+
 				var signed	= new Uint8Array(
-					superSphincs.signatureLength + message.length
+					superSphincs.signatureLength + messageBytes.length
 				);
 
 				signed.set(signature);
-				signed.set(message, superSphincs.signatureLength);
+				signed.set(messageBytes, superSphincs.signatureLength);
 
 				callback(signed);
 			}
@@ -249,7 +261,10 @@ var superSphincs	= {
 
 	open: function (signed, publicKey, callback) {
 		var signature	= new Uint8Array(signed.buffer, 0, superSphincs.signatureLength);
-		var message		= new Uint8Array(signed.buffer, superSphincs.signatureLength);
+
+		var message		= getMessageText(
+			new Uint8Array(signed.buffer, superSphincs.signatureLength)
+		);
 
 		superSphincs.verifyDetached(signature, message, publicKey, function (isValid) {
 			if (isValid) {
@@ -265,7 +280,11 @@ var superSphincs	= {
 		var hash	= hashMessage(message);
 
 		var sphincsIsValid	= sphincs.verifyDetached(
-			new Uint8Array(signature.buffer, rsa.signatureLength),
+			new Uint8Array(
+				signature.buffer,
+				rsa.signatureLength,
+				sphincs.signatureLength
+			),
 			hash,
 			new Uint8Array(publicKey.buffer, rsa.publicKeyLength)
 		);

@@ -22,7 +22,7 @@ the callback will be null, and the second will be a string containing an error m
 
 ## Example Usage
 
-	const message	= new Uint8Array([104, 101, 108, 108, 111, 0]); // "hello"
+	const message	= "hello";
 
 	superSphincs.keyPair(keyPair => {
 		superSphincs.sign(message, keyPair.privateKey, signed =>
@@ -33,7 +33,7 @@ the callback will be null, and the second will be a string containing an error m
 
 		superSphincs.signDetached(message, keyPair.privateKey, signature =>
 			superSphincs.verifyDetached(signature, message, keyPair.publicKey, isValid =>
-				console.log(isValid) // same as true
+				console.log(isValid) // true
 			)
 		);
 	});
