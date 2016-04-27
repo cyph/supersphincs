@@ -19833,8 +19833,8 @@ var rsa	= {
 		}
 	,
 
-	publicKeyLength: 420,
-	privateKeyLength: 1660,
+	publicKeyLength: 450,
+	privateKeyLength: 1700,
 	signatureLength: 256,
 
 	errorMessages: {
