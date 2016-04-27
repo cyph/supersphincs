@@ -8,6 +8,7 @@ all:
 		tr '\n' '☁' | perl -pe 's/.*Codecs(.*?)Memory management.*/\1/g' | tr '☁' '\n' > codecs.js
 
 	git clone https://github.com/emn178/js-sha512.git
+	sed -i 's|typeof module|"undefined"|' js-sha512/build/sha512.min.js
 
 	cp pre.js dist/supersphincs.debug.js
 	cat sphincs.js/dist/sphincs.debug.js >> dist/supersphincs.debug.js
