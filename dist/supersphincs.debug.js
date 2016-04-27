@@ -1,4 +1,14 @@
-var superSphincs = (function () { 
+var isNode	= false;
+if (typeof module !== 'undefined' && module.exports) {
+	isNode	= true;
+}
+
+
+var superSphincs = (function () {
+
+if (isNode) {
+	self	= this;
+}
 var sphincs = (function () { 
 
 // The Module object: Our interface to the outside world. We import
@@ -19732,35 +19742,65 @@ self.sphincs	= sphincs;
         //---------------------------------------------------------------------------
         // ;
 
-function importJWK (key, algorithm, purpose, callback) {
-	crypto.subtle.importKey(
-		'jwk',
-		JSON.parse(to_string(new Uint8Array(key.buffer, 0, key.indexOf(0)))),
-		algorithm,
-		false,
-		[purpose]
-	).then(callback).catch(function () {
-		callback(null, 'Failed to import key.');
-	});
+var rsaKeygen, pemJwk;
+if (isNode) {
+	rsaKeygen	= require('rsa-keygen');
+	pemJwk		= require('pem-jwk');
+}
+
+
+function importJWK (key, purpose, callback) {
+	var jwk	= JSON.parse(to_string(new Uint8Array(key.buffer, 0, key.indexOf(0))));
+
+	if (isNode) {
+		callback(pemJwk.jwk2pem(jwk));
+	}
+	else {
+		crypto.subtle.importKey(
+			'jwk',
+			jwk,
+			rsa.algorithm,
+			false,
+			[purpose]
+		).then(callback).catch(function () {
+			callback(null, 'Failed to import key.');
+		});
+	}
 }
 	
-function exportJWK (key, algorithm, callback) {
-	crypto.subtle.exportKey('jwk', key, algorithm).then(function (data) {
-		callback(from_string(JSON.stringify(data)));
-	}).catch(function () {
-		callback(null, 'Failed to export key.');
-	});
+function exportJWK (key, callback) {
+	function returnJWK (jwk) {
+		callback(from_string(JSON.stringify(jwk)));
+	}
+
+	if (isNode) {
+		returnJWK(pemJwk.pem2jwk(key));
+	}
+	else {
+		crypto.subtle.exportKey(
+			'jwk',
+			key,
+			rsa.algorithm.name
+		).then(function (jwk) {
+			returnJWK(jwk);
+		}).catch(function () {
+			callback(null, 'Failed to export key.');
+		});
+	}
 }
 
 var rsa	= {
-	algorithm: {
-		name: 'RSASSA-PKCS1-v1_5',
-		hash: {
-			name: 'SHA-256'
-		},
-		modulusLength: 2048,
-		publicExponent: new Uint8Array([0x01, 0x00, 0x01])
-	},
+	algorithm: isNode ?
+		'RSA-SHA256' :
+		{
+			name: 'RSASSA-PKCS1-v1_5',
+			hash: {
+				name: 'SHA-256'
+			},
+			modulusLength: 2048,
+			publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+		}
+	,
 
 	publicKeyLength: 420,
 	privateKeyLength: 1660,
@@ -19773,34 +19813,38 @@ var rsa	= {
 	},
 
 	keyPair: function (callback) {
-		try {
-			crypto.subtle.generateKey(
-				rsa.algorithm,
-				true,
-				['sign', 'verify']
-			).then(function (kp) {
-				var keyPair = {};
+		function returnKeyPair (kp) {
+			var keyPair = {};
 
-				exportJWK(
-					kp.publicKey,
-					rsa.algorithm.name,
-					function (publicKey) {
-						keyPair.publicKey = publicKey;
+			exportJWK(kp.publicKey, function (publicKey) {
+				keyPair.publicKey = publicKey;
 
-						exportJWK(
-							kp.privateKey,
-							rsa.algorithm.name,
-							function (privateKey) {
-								keyPair.privateKey = privateKey;
+				exportJWK(kp.privateKey, function (privateKey) {
+					keyPair.privateKey = privateKey;
 
-								callback(keyPair);
-							}
-						);
-					}
-				);
-			}).catch(function () {
-				callback(null, rsa.errorMessages.keyPair);
+					callback(keyPair);
+				});
 			});
+		}
+
+		try {
+			if (isNode) {
+				var kp	= rsaKeygen.generate();
+
+				returnKeyPair({
+					publicKey: kp.public_key,
+					privateKey: kp.private_key
+				});
+			}
+			else {
+				crypto.subtle.generateKey(
+					rsa.algorithm,
+					true,
+					['sign', 'verify']
+				).then(returnKeyPair).catch(function () {
+					callback(null, rsa.errorMessages.keyPair);
+				});
+			}
 		}
 		catch (_) {
 			callback(null, rsa.errorMessages.keyPair);
@@ -19809,14 +19853,22 @@ var rsa	= {
 
 	signDetached: function (message, privateKey, callback) {
 		try {
-			importJWK(privateKey, rsa.algorithm, 'sign', function (sk) {
-				crypto.subtle.sign(rsa.algorithm, sk, message).
-					then(function (signature) {
-						callback(new Uint8Array(signature));
-					}).catch(function () {
-						callback(null, rsa.errorMessages.signDetached);
-					})
-				;
+			importJWK(privateKey, 'sign', function (sk) {
+				if (isNode) {
+					var signer	= crypto.createSign(rsa.algorithm);
+					signer.write(new Buffer(message));
+					signer.end();
+					callback(new Uint8Array(signer.sign(sk)));
+				}
+				else {
+					crypto.subtle.sign(rsa.algorithm, sk, message).
+						then(function (signature) {
+							callback(new Uint8Array(signature));
+						}).catch(function () {
+							callback(null, rsa.errorMessages.signDetached);
+						})
+					;
+				}
 			});
 		}
 		catch (_) {
@@ -19826,14 +19878,21 @@ var rsa	= {
 
 	verifyDetached: function (signature, message, publicKey, callback) {
 		try {
-			importJWK(publicKey, rsa.algorithm, 'verify', function (pk) {
-				crypto.subtle.verify(rsa.algorithm, pk, signature, message).
-					then(function (isValid) {
-						callback(isValid);
-					}).catch(function () {
-						callback(null, rsa.errorMessages.verifyDetached);
-					})
-				;
+			importJWK(publicKey, 'verify', function (pk) {
+				if (isNode) {
+					var verifier	= crypto.createVerify(rsa.algorithm);
+					verifier.update(new Buffer(message));
+					callback(verifier.sign(pk, signature));
+				}
+				else {
+					crypto.subtle.verify(rsa.algorithm, pk, signature, message).
+						then(function (isValid) {
+							callback(isValid);
+						}).catch(function () {
+							callback(null, rsa.errorMessages.verifyDetached);
+						})
+					;
+				}
 			});
 		}
 		catch (_) {
@@ -19857,7 +19916,12 @@ var superSphincs	= {
 	keyPair: function (callback) {
 		var sphincsKeyPair	= sphincs.keyPair();
 
-		rsa.keyPair(function (rsaKeyPair) {
+		rsa.keyPair(function (rsaKeyPair, err) {
+			if (err) {
+				callback(null, superSphincs.errorMessages.keyPair);
+				return;
+			}
+
 			var keyPair	= {
 				publicKey: new Uint8Array(superSphincs.publicKeyLength),
 				privateKey: new Uint8Array(superSphincs.privateKeyLength)
@@ -19883,7 +19947,7 @@ var superSphincs	= {
 			new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength),
 			function (rsaSignature, err) {
 				if (err) {
-					callback(null, superSphincs.errorMessages.keyPair);
+					callback(null, superSphincs.errorMessages.sign);
 					return;
 				}
 
@@ -19966,4 +20030,10 @@ return superSphincs;
 
 }());
 
-self.superSphincs	= superSphincs;
+
+if (isNode) {
+	module.exports		= superSphincs;
+}
+else {
+	self.superSphincs	= superSphincs;
+}

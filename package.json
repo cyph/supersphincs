@@ -1,0 +1,26 @@
+{
+	"name": "supersphincs",
+	"version": "1.0.0",
+	"description": "SPHINCS and RSASSA-PKCS1-v1_5 paired together as a single signing scheme",
+	"main": "dist/supersphincs.js",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/cyph/supersphincs.js.git"
+	},
+	"keywords": [
+		"cryptography",
+		"post-quantum",
+		"sphincs",
+		"rsa",
+		"asm.js"
+	],
+	"author": "Cyph, Inc. <supersphincs@cyph.com> (https://github.com/cyph)",
+	"license": "BSD-2-Clause",
+	"bugs": {
+		"url": "https://github.com/cyph/supersphincs.js/issues"
+	},
+	"dependencies": {
+		"rsa-keygen": "*",
+		"pem-jwk": "*"
+	}
+}
