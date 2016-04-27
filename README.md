@@ -9,7 +9,7 @@ A wrapper around [sphincs.js](https://github.com/cyph/sphincs.js) that pairs
 To work around extremely poor performance of BLAKE-512 in the emitted SPHINCS asm.js code,
 hashing is first performed in JavaScript using a remarkably efficient [pure JS implementation
 of SHA-512](https://github.com/emn178/js-sha512) which outperforms native SubtleCrypto
-SHA-512 on both Chrome and Firefox.
+SHA-512 in both Chrome and Firefox.
 
 RSA signing is performed by the current platform's native implementation (SubtleCrypto API
 in the browser, or Crypto API in Node.js). In clients without a native implementation,
