@@ -47,6 +47,20 @@ function exportJWK (key, callback) {
 	}
 }
 
+function decodeSignature (signature) {
+	return typeof signature === 'string' ?
+		from_base64(signature) :
+		signature
+	;
+}
+
+function encodeSignature (signature) {
+	return typeof signature === 'string' ?
+		signature :
+		to_base64(signature).replace(/\n/g, '')
+	;
+}
+
 function getMessageBytes (message) {
 	return typeof message === 'string' ?
 		from_string(message) :
@@ -64,6 +78,7 @@ function getMessageText (message) {
 function hashMessage (message) {
 	return from_hex(sha512(getMessageText(message)));
 }
+
 
 var rsa	= {
 	algorithm: isNode ?
@@ -215,24 +230,24 @@ var superSphincs	= {
 	sign: function (message, privateKey, callback) {
 		superSphincs.signDetached(message, privateKey, function (signature, err) {
 			if (signature) {
-				var messageBytes	= getMessageBytes(message);
+				message		= getMessageBytes(message);
 
 				var signed	= new Uint8Array(
-					superSphincs.signatureLength + messageBytes.length
+					superSphincs.signatureLength + message.length
 				);
 
 				signed.set(signature);
-				signed.set(messageBytes, superSphincs.signatureLength);
+				signed.set(message, superSphincs.signatureLength);
 
-				callback(signed);
+				callback(encodeSignature(signed));
 			}
 			else {
 				callback(null, err);
 			}
-		});
+		}, true);
 	},
 
-	signDetached: function (message, privateKey, callback) {
+	signDetached: function (message, privateKey, callback, noEncode) {
 		var hash	= hashMessage(message);
 
 		var sphincsSignature	= sphincs.signDetached(
@@ -254,12 +269,19 @@ var superSphincs	= {
 				signature.set(rsaSignature);
 				signature.set(sphincsSignature, rsa.signatureLength);
 
-				callback(signature);
+				if (noEncode) {
+					callback(signature);
+				}
+				else {
+					callback(encodeSignature(signature));
+				}
 			}
 		);
 	},
 
 	open: function (signed, publicKey, callback) {
+		signed	= decodeSignature(signed);
+
 		var signature	= new Uint8Array(signed.buffer, 0, superSphincs.signatureLength);
 
 		var message		= getMessageText(
@@ -277,6 +299,8 @@ var superSphincs	= {
 	},
 
 	verifyDetached: function (signature, message, publicKey, callback) {
+		signature	= decodeSignature(signature);
+
 		var hash	= hashMessage(message);
 
 		var sphincsIsValid	= sphincs.verifyDetached(

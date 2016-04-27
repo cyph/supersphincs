@@ -11,30 +11,26 @@ all:
 	sed -i 's|typeof module|"undefined"|' js-sha512/build/sha512.min.js
 
 	cp pre.js dist/supersphincs.debug.js
-	cat sphincs.js/dist/sphincs.debug.js >> dist/supersphincs.debug.js
-	echo >> dist/supersphincs.debug.js
+	echo 'BALLS();' >> dist/supersphincs.debug.js
 	cat js-sha512/build/sha512.min.js >> dist/supersphincs.debug.js
 	cat codecs.js >> dist/supersphincs.debug.js
 	cat post.js >> dist/supersphincs.debug.js
 
-	echo " \
-		$$(cat pre.js) \
-		BALLS(); \
-		$$(cat js-sha512/build/sha512.min.js) \
-		$$(cat codecs.js) \
-		$$(cat post.js) \
-	" | uglifyjs > dist/supersphincs.js
+	uglifyjs dist/supersphincs.debug.js > dist/supersphincs.js
+
 	node -e ' \
 		var fs = require("fs"); \
-		fs.writeFileSync( \
-			"dist/supersphincs.js", \
-			fs.readFileSync("dist/supersphincs.js"). \
-				toString(). \
-				replace( \
-					"BALLS()", \
-					fs.readFileSync("sphincs.js/dist/sphincs.js").toString().trim() \
-				) \
-		); \
+		for (const file of ["dist/supersphincs.js", "dist/supersphincs.debug.js"]) { \
+			fs.writeFileSync( \
+				file, \
+				fs.readFileSync(file). \
+					toString(). \
+					replace( \
+						"BALLS()", \
+						fs.readFileSync("sphincs.js/dist/sphincs.js").toString().trim() \
+					) \
+			); \
+		}; \
 	'
 
 	rm -rf sphincs.js codecs.js js-sha512
