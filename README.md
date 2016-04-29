@@ -28,7 +28,7 @@ SPHINCS signature.
 			(signed, messageHash, err) => superSphincs.open(
 				signed,
 				keyPair.publicKey,
-				(verified, messageHash, err) => console.log(verified) // same as message
+				(verified, messageHash, err) => console.log(verified) /* Same as message */
 			)
 		);
 
@@ -39,7 +39,48 @@ SPHINCS signature.
 				signature,
 				message,
 				keyPair.publicKey,
-				(isValid, messageHash, err) => console.log(isValid) // true
+				(isValid, messageHash, err) => console.log(isValid) /* true */
 			)
 		);
+
+
+		superSphincs.exportKeys(keyPair, 'secret passphrase', (keyData, err) => {
+			/* Can save exported keys to disk or whatever */
+
+			localStorage.superSphincsPublicKey	= keyData.public.superSphincs;
+			localStorage.sphincsPublicKey		= keyData.public.sphincs;
+			localStorage.rsaPublicKey			= keyData.public.rsa;
+
+			localStorage.superSphincsPrivateKey	= keyData.private.superSphincs;
+			localStorage.sphincsPrivateKey		= keyData.private.sphincs;
+			localStorage.rsaPrivateKey			= keyData.private.rsa;
+
+
+			/* Reconstruct an exported key using either the superSphincs
+				value or any pair of valid sphincs and rsa values */
+
+			superSphincs.importKeys(
+				{
+					public: {
+						sphincs: localStorage.sphincsPublicKey,
+						rsa: localStorage.rsaPublicKey
+					}
+				},
+				(keyPair, err) => {
+					/* May now use keyPair.publicKey as in the above examples */
+				}
+			);
+
+			superSphincs.importKeys(
+				{
+					private: {
+						superSphincs: localStorage.superSphincsPrivateKey
+					}
+				},
+				'secret passphrase',
+				(keyPair, err) => {
+					/* May now use keyPair as in the above examples */
+				}
+			);
+		});
 	});

@@ -20,14 +20,16 @@ all:
 
 	node -e ' \
 		var fs = require("fs"); \
-		for (const file of ["dist/supersphincs.js", "dist/supersphincs.debug.js"]) { \
+		for (var file of ["dist/supersphincs.js", "dist/supersphincs.debug.js"]) { \
 			fs.writeFileSync( \
 				file, \
 				fs.readFileSync(file). \
 					toString(). \
 					replace( \
 						"BALLS()", \
-						fs.readFileSync("sphincs.js/dist/sphincs.js").toString().trim() \
+						fs.readFileSync( \
+							"sphincs.js/" + file.replace("super", "") \
+						).toString().trim() \
 					) \
 			); \
 		}; \
