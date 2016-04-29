@@ -82,5 +82,21 @@ SPHINCS signature.
 					/* May now use keyPair as in the above examples */
 				}
 			);
+
+			superSphincs.importKeys(
+				{
+					private: {
+						sphincs: localStorage.sphincsPrivateKey,
+						rsa: localStorage.someOtherRsaPrivateKey
+					}
+				},
+				{
+					sphincs: 'secret passphrase',
+					rsa: 'hunter2'
+				},
+				(keyPair, err) => {
+					/* May now use keyPair as in the above examples */
+				}
+			);
 		});
 	});

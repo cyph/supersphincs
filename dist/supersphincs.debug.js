@@ -20549,7 +20549,7 @@ var superSphincs	= {
 				if (password) {
 					decrypt(
 						rsaPrivateKey,
-						password,
+						typeof password === 'string' ? password : password.rsa,
 						function (decrypted, err) {
 							if (err) {
 								callback(null, err);
@@ -20569,7 +20569,7 @@ var superSphincs	= {
 
 							decrypt(
 								sphincsPrivateKey,
-								password,
+								typeof password === 'string' ? password : password.sphincs,
 								function (decrypted, err) {
 									if (err) {
 										callback(null, err);
