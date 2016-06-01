@@ -433,6 +433,8 @@ var superSphincs	= {
 		verify: 'Failed to attempt to verify SuperSPHINCS signature.'
 	},
 
+	hashMessage: hashMessage,
+
 	keyPair: function (callback) {
 		var sphincsKeyPair;
 
