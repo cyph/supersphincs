@@ -385,6 +385,7 @@ var superSphincs	= {
 			var sphincsKeyPair	= sphincs.keyPair();
 
 			var keyPair	= {
+				keyType: 'supersphincs',
 				publicKey: new Uint8Array(superSphincs.publicKeyLength),
 				privateKey: new Uint8Array(superSphincs.privateKeyLength)
 			};
