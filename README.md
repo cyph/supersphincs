@@ -59,6 +59,10 @@ SPHINCS signature.
 		} */) => {
 			/* Can save exported keys to disk or whatever */
 
+			if (typeof localStorage === 'undefined') {
+				localStorage	= {};
+			}
+
 			localStorage.superSphincsPublicKey	= keyData.public.superSphincs;
 			localStorage.sphincsPublicKey		= keyData.public.sphincs;
 			localStorage.rsaPublicKey			= keyData.public.rsa;
