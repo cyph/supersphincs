@@ -9,7 +9,7 @@ if (isNode) {
 
 function importJWK (key, purpose) {
 	return Promise.resolve().then(function () {
-		var jwk	= JSON.parse(to_string(new Uint8Array(key.buffer, 0, key.indexOf(0))));
+		var jwk	= JSON.parse(to_string(new Uint8Array(new Uint8Array(key).buffer, 0, key.indexOf(0))));
 
 		if (isNode) {
 			return pemJwk.jwk2pem(jwk);
