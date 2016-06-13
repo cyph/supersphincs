@@ -43,6 +43,15 @@ function exportJWK (key) {
 	});
 }
 
+function clearMemory (data) {
+	if (data instanceof Uint8Array) {
+		memzero(data);
+	}
+	else if (isNode && data instanceof Buffer) {
+		data.fill(0);
+	}
+}
+
 function decodeBase64 (data) {
 	return typeof data === 'string' ?
 		from_base64(data) :
@@ -152,7 +161,16 @@ function encrypt (plaintext, password) {
 			var buf2	= cipher.final();
 			var buf3	= cipher.getAuthTag();
 
-			return new Uint8Array(Buffer.concat([o.iv, o.salt, buf1, buf2, buf3]));
+			var cyphertext	= new Uint8Array(Buffer.concat([o.iv, o.salt, buf1, buf2, buf3]));
+
+			clearMemory(o.iv);
+			clearMemory(o.salt);
+			clearMemory(o.key);
+			clearMemory(buf1);
+			clearMemory(buf2);
+			clearMemory(buf3);
+
+			return cyphertext;
 		});
 	}
 	else {
@@ -178,6 +196,11 @@ function encrypt (plaintext, password) {
 			cyphertext.set(o.salt, aes.ivBytes);
 			cyphertext.set(encrypted, aes.ivBytes + aes.keyDerivation.saltBytes);
 
+			clearMemory(o.iv);
+			clearMemory(o.salt);
+			clearMemory(o.key);
+			clearMemory(encrypted);
+
 			return cyphertext;
 		});
 	}
@@ -197,6 +220,8 @@ function decrypt (cyphertext, password) {
 	}).then(function (results) {
 		var iv	= results[0];
 		var key	= results[1];
+
+		var decrypted;
 
 		if (isNode) {
 			var encrypted	= new Uint8Array(
@@ -224,7 +249,10 @@ function decrypt (cyphertext, password) {
 			var buf1	= decipher.update(new Buffer(encrypted));
 			var buf2	= decipher.final();
 
-			return Buffer.concat([buf1, buf2]);
+			decrypted	= Buffer.concat([buf1, buf2]);;
+
+			clearMemory(buf1);
+			clearMemory(buf2);
 		}
 		else {
 			var encrypted	= new Uint8Array(
@@ -232,7 +260,7 @@ function decrypt (cyphertext, password) {
 				aes.ivBytes + aes.keyDerivation.saltBytes
 			);
 
-			return crypto.subtle.decrypt(
+			decrypted	= crypto.subtle.decrypt(
 				{
 					name: aes.algorithm,
 					iv: iv,
@@ -242,7 +270,14 @@ function decrypt (cyphertext, password) {
 				encrypted
 			);
 		}
-	}).then(function (decrypted) {
+
+		return Promise.all([key, decrypted]);
+	}).then(function (results) {
+		var key			= results[0];
+		var decrypted	= results[1];
+
+		clearMemory(key);
+
 		return new Uint8Array(decrypted);
 	});
 }
@@ -314,32 +349,55 @@ var rsa	= {
 
 	signDetached: function (message, privateKey) {
 		return importJWK(privateKey, 'sign').then(function (sk) {
+			var signature;
+
 			if (isNode) {
-				var signer	= crypto.createSign(rsa.algorithm);
-				signer.write(new Buffer(message));
+				var messageBuffer	= new Buffer(message);
+				var signer			= crypto.createSign(rsa.algorithm);
+				signer.write(messageBuffer);
 				signer.end();
 
-				return signer.sign(sk);
+				signature	= signer.sign(sk);
+
+				clearMemory(messageBuffer);
 			}
 			else {
-				return crypto.subtle.sign(rsa.algorithm, sk, message);
+				signature	= crypto.subtle.sign(rsa.algorithm, sk, message);
 			}
-		}).then(function (signature) {
+
+			return Promise.all([sk, signature]);
+		}).then(function (results) {
+			var sk			= results[0];
+			var signature	= results[1];
+
+			clearMemory(sk);
+
 			return new Uint8Array(signature);
 		});
 	},
 
 	verifyDetached: function (signature, message, publicKey) {
 		return importJWK(publicKey, 'verify').then(function (pk) {
+			var isValid;
+
 			if (isNode) {
 				var verifier	= crypto.createVerify(rsa.algorithm);
 				verifier.update(new Buffer(message));
 
-				return verifier.verify(pk, signature);
+				isValid	= verifier.verify(pk, signature);
 			}
 			else {
-				return crypto.subtle.verify(rsa.algorithm, pk, signature, message);
+				isValid	= crypto.subtle.verify(rsa.algorithm, pk, signature, message);
 			}
+
+			return Promise.all([pk, isValid]);
+		}).then(function (results) {
+			var pk		= results[0];
+			var isValid	= results[1];
+
+			clearMemory(pk);
+
+			return isValid;
 		});
 	}
 };
@@ -352,8 +410,11 @@ var superSphincs	= {
 	hashBytes: 64,
 
 	hash: function (message) {
+		var messageBinary;
+		var shouldClearMessageBinary	= typeof message === 'string';
+
 		return Promise.resolve().then(function () {
-			var messageBinary	= decodeString(message);
+			messageBinary	= decodeString(message);
 
 			if (isNode) {
 				var hasher	= crypto.createHash('sha512');
@@ -370,9 +431,17 @@ var superSphincs	= {
 				);
 			}
 		}).then(function (hash) {
+			if (shouldClearMessageBinary) {
+				clearMemory(messageBinary);
+			}
+
 			var binary	= new Uint8Array(hash);
 			return {binary: binary, hex: to_hex(binary)};
 		}).catch(function () {
+			if (shouldClearMessageBinary) {
+				clearMemory(messageBinary);
+			}
+
 			var hex	= sha512(encodeString(message));
 			return {binary: from_hex(hex), hex: hex};
 		});
@@ -393,11 +462,18 @@ var superSphincs	= {
 			keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyBytes);
 			keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyBytes);
 
+			clearMemory(sphincsKeyPair.privateKey);
+			clearMemory(rsaKeyPair.privateKey);
+			clearMemory(sphincsKeyPair.publicKey);
+			clearMemory(rsaKeyPair.publicKey);
+
 			return keyPair;
 		});
 	},
 
 	sign: function (message, privateKey, getHash) {
+		var shouldClearMessage	= typeof message === 'string';
+
 		return superSphincs.signDetached(message, privateKey, true, true).then(function (o) {
 			message		= decodeString(message);
 
@@ -413,12 +489,26 @@ var superSphincs	= {
 				hash: o.hash.hex
 			};
 
+			if (shouldClearMessage) {
+				clearMemory(message);
+			}
+
+			clearMemory(signed);
+			clearMemory(o.signature);
+			clearMemory(o.hash.binary);
+
 			if (getHash) {
 				return result;
 			}
 			else {
 				return result.signed;
 			}
+		}).catch(function (err) {
+			if (shouldClearMessage) {
+				clearMemory(message);
+			}
+
+			throw err;
 		});
 	},
 
@@ -447,6 +537,14 @@ var superSphincs	= {
 				{signature: encodeBase64(signature), hash: hash.hex}
 			;
 
+			if (!noEncode) {
+				clearMemory(signature);
+				clearMemory(hash.binary);
+			}
+
+			clearMemory(sphincsSignature);
+			clearMemory(rsaSignature);
+
 			if (getHash) {
 				return result;
 			}
@@ -457,6 +555,8 @@ var superSphincs	= {
 	},
 
 	open: function (signed, publicKey, getHash) {
+		var shouldClearSigned	= typeof signed === 'string';
+
 		return Promise.resolve().then(function () {
 			signed	= decodeBase64(signed);
 
@@ -480,6 +580,10 @@ var superSphincs	= {
 			var message	= results[0];
 			var o		= results[1];
 
+			if (shouldClearSigned) {
+				clearMemory(signed);
+			}
+
 			if (o.isValid) {
 				var result	= {verified: message, hash: o.hash};
 
@@ -493,10 +597,18 @@ var superSphincs	= {
 			else {
 				throw 'Failed to open SuperSPHINCS signed message.';
 			}
+		}).catch(function (err) {
+			if (shouldClearSigned) {
+				clearMemory(signed);
+			}
+
+			throw err;
 		});
 	},
 
 	verifyDetached: function (signature, message, publicKey, getHash) {
+		var shouldClearSignature	= typeof signature === 'string';
+
 		return superSphincs.hash(message).then(function (hash) {
 			signature	= decodeBase64(signature);
 
@@ -529,13 +641,25 @@ var superSphincs	= {
 				hash: hash.hex
 			};
 
+			if (shouldClearSignature) {
+				clearMemory(signature);
+			}
+
+			clearMemory(hash.binary);
+
 			if (getHash) {
 				return result;
 			}
 			else {
 				return result.isValid;
 			}
-		});
+		}).catch(function (err) {
+			if (shouldClearSignature) {
+				clearMemory(signature);
+			}
+
+			throw err;
+		});;
 	},
 
 	exportKeys: function (keyPair, password) {
@@ -593,7 +717,13 @@ var superSphincs	= {
 					encrypt(rsaPrivateKey, password),
 					encrypt(sphincsPrivateKey, password),
 					encrypt(superSphincsPrivateKey, password)
-				]);
+				]).then(function (results) {
+					clearMemory(superSphincsPrivateKey);
+					clearMemory(sphincsPrivateKey);
+					clearMemory(rsaPrivateKey);
+
+					return results;
+				});
 			}
 			else {
 				return [
@@ -611,11 +741,21 @@ var superSphincs	= {
 				};
 			}
 
-			return {
-				rsa: encodeBase64(results[0]),
-				sphincs: encodeBase64(results[1]),
-				superSphincs: encodeBase64(results[2])
+			var rsaPrivateKey			= results[0];
+			var sphincsPrivateKey		= results[1];
+			var superSphincsPrivateKey	= results[2];
+
+			var privateKeyData	= {
+				rsa: encodeBase64(rsaPrivateKey),
+				sphincs: encodeBase64(sphincsPrivateKey),
+				superSphincs: encodeBase64(superSphincsPrivateKey)
 			};
+
+			clearMemory(superSphincsPrivateKey);
+			clearMemory(sphincsPrivateKey);
+			clearMemory(rsaPrivateKey);
+
+			return privateKeyData;
 		}).then(function (privateKeyData) {
 			return {
 				private: privateKeyData,

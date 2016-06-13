@@ -9,6 +9,7 @@ var superSphincs = (function () {
 if (isNode) {
 	self	= this;
 }
+
 var sphincs = (function () { 
 
 // The Module object: Our interface to the outside world. We import
@@ -19586,6 +19587,7 @@ return sphincs;
 self.sphincs	= sphincs;
 
 //# sourceMappingURL=sphincs.debug.js.map;
+
 (function(K,sa){var ka="undefined"!="undefined";ka&&(K=global);var a="0123456789abcdef".split(""),ra=[-2147483648,8388608,32768,128],ea=[24,16,8,0],da=[1116352408,3609767458,1899447441,602891725,3049323471,3964484399,3921009573,2173295548,961987163,4081628472,1508970993,3053834265,2453635748,2937671579,2870763221,3664609560,3624381080,2734883394,310598401,1164996542,607225278,1323610764,1426881987,3590304994,1925078388,4068182383,2162078206,991336113,2614888103,633803317,3248222580,3479774868,3835390401,
 2666613458,4022224774,944711139,264347078,2341262773,604807628,2007800933,770255983,1495990901,1249150122,1856431235,1555081692,3175218132,1996064986,2198950837,2554220882,3999719339,2821834349,766784016,2952996808,2566594879,3210313671,3203337956,3336571891,1034457026,3584528711,2466948901,113926993,3758326383,338241895,168717936,666307205,1188179964,773529912,1546045734,1294757372,1522805485,1396182291,2643833823,1695183700,2343527390,1986661051,1014477480,2177026350,1206759142,2456956037,344077627,
 2730485921,1290863460,2820302411,3158454273,3259730800,3505952657,3345764771,106217008,3516065817,3606008344,3600352804,1432725776,4094571909,1467031594,275423344,851169720,430227734,3100823752,506948616,1363258195,659060556,3750685593,883997877,3785050280,958139571,3318307427,1322822218,3812723403,1537002063,2003034995,1747873779,3602036899,1955562222,1575990012,2024104815,1125592928,2227730452,2716904306,2361852424,442776044,2428436474,593698344,2756734187,3733110249,3204031479,2999351573,3329325298,
@@ -19608,7 +19610,9 @@ d=(q&65535)+(O&65535);b=(q>>>16)+(O>>>16)+(d>>>16);c=(n&65535)+(N&65535)+(b>>>16
 15]+a[t&15]+a[u>>28&15]+a[u>>24&15]+a[u>>20&15]+a[u>>16&15]+a[u>>12&15]+a[u>>8&15]+a[u>>4&15]+a[u&15]+a[v>>28&15]+a[v>>24&15]+a[v>>20&15]+a[v>>16&15]+a[v>>12&15]+a[v>>8&15]+a[v>>4&15]+a[v&15]+a[w>>28&15]+a[w>>24&15]+a[w>>20&15]+a[w>>16&15]+a[w>>12&15]+a[w>>8&15]+a[w>>4&15]+a[w&15];256<=K&&(n+=a[x>>28&15]+a[x>>24&15]+a[x>>20&15]+a[x>>16&15]+a[x>>12&15]+a[x>>8&15]+a[x>>4&15]+a[x&15]);384<=K&&(n+=a[y>>28&15]+a[y>>24&15]+a[y>>20&15]+a[y>>16&15]+a[y>>12&15]+a[y>>8&15]+a[y>>4&15]+a[y&15]+a[z>>28&15]+a[z>>
 24&15]+a[z>>20&15]+a[z>>16&15]+a[z>>12&15]+a[z>>8&15]+a[z>>4&15]+a[z&15]+a[A>>28&15]+a[A>>24&15]+a[A>>20&15]+a[A>>16&15]+a[A>>12&15]+a[A>>8&15]+a[A>>4&15]+a[A&15]+a[B>>28&15]+a[B>>24&15]+a[B>>20&15]+a[B>>16&15]+a[B>>12&15]+a[B>>8&15]+a[B>>4&15]+a[B&15]);512==K&&(n+=a[C>>28&15]+a[C>>24&15]+a[C>>20&15]+a[C>>16&15]+a[C>>12&15]+a[C>>8&15]+a[C>>4&15]+a[C&15]+a[D>>28&15]+a[D>>24&15]+a[D>>20&15]+a[D>>16&15]+a[D>>12&15]+a[D>>8&15]+a[D>>4&15]+a[D&15]+a[E>>28&15]+a[E>>24&15]+a[E>>20&15]+a[E>>16&15]+a[E>>12&
 15]+a[E>>8&15]+a[E>>4&15]+a[E&15]+a[F>>28&15]+a[F>>24&15]+a[F>>20&15]+a[F>>16&15]+a[F>>12&15]+a[F>>8&15]+a[F>>4&15]+a[F&15]);return n};!K.JS_SHA512_TEST&&ka?(Z.sha512=Z,Z.sha384=oa,Z.sha512_256=pa,Z.sha512_224=qa,module.exports=Z):K&&(K.sha512=Z,K.sha384=oa,K.sha512_256=pa,K.sha512_224=qa)})(this);
+
 !function(t){function e(){}function n(t,e){return function(){t.apply(e,arguments)}}function o(t){if("object"!=typeof this)throw new TypeError("Promises must be constructed via new");if("function"!=typeof t)throw new TypeError("not a function");this._state=0,this._handled=!1,this._value=void 0,this._deferreds=[],s(t,this)}function r(t,e){for(;3===t._state;)t=t._value;return 0===t._state?void t._deferreds.push(e):(t._handled=!0,void a(function(){var n=1===t._state?e.onFulfilled:e.onRejected;if(null===n)return void(1===t._state?i:f)(e.promise,t._value);var o;try{o=n(t._value)}catch(r){return void f(e.promise,r)}i(e.promise,o)}))}function i(t,e){try{if(e===t)throw new TypeError("A promise cannot be resolved with itself.");if(e&&("object"==typeof e||"function"==typeof e)){var r=e.then;if(e instanceof o)return t._state=3,t._value=e,void u(t);if("function"==typeof r)return void s(n(r,e),t)}t._state=1,t._value=e,u(t)}catch(i){f(t,i)}}function f(t,e){t._state=2,t._value=e,u(t)}function u(t){2===t._state&&0===t._deferreds.length&&a(function(){t._handled||d(t._value)});for(var e=0,n=t._deferreds.length;n>e;e++)r(t,t._deferreds[e]);t._deferreds=null}function c(t,e,n){this.onFulfilled="function"==typeof t?t:null,this.onRejected="function"==typeof e?e:null,this.promise=n}function s(t,e){var n=!1;try{t(function(t){n||(n=!0,i(e,t))},function(t){n||(n=!0,f(e,t))})}catch(o){if(n)return;n=!0,f(e,o)}}var l=setTimeout,a="function"==typeof setImmediate&&setImmediate||function(t){l(t,0)},d=function(t){"undefined"!=typeof console&&console&&console.warn("Possible Unhandled Promise Rejection:",t)};o.prototype["catch"]=function(t){return this.then(null,t)},o.prototype.then=function(t,n){var o=new this.constructor(e);return r(this,new c(t,n,o)),o},o.all=function(t){var e=Array.prototype.slice.call(t);return new o(function(t,n){function o(i,f){try{if(f&&("object"==typeof f||"function"==typeof f)){var u=f.then;if("function"==typeof u)return void u.call(f,function(t){o(i,t)},n)}e[i]=f,0===--r&&t(e)}catch(c){n(c)}}if(0===e.length)return t([]);for(var r=e.length,i=0;i<e.length;i++)o(i,e[i])})},o.resolve=function(t){return t&&"object"==typeof t&&t.constructor===o?t:new o(function(e){e(t)})},o.reject=function(t){return new o(function(e,n){n(t)})},o.race=function(t){return new o(function(e,n){for(var o=0,r=t.length;r>o;o++)t[o].then(e,n)})},o._setImmediateFn=function(t){a=t},o._setUnhandledRejectionFn=function(t){d=t},"undefined"!="undefined"&&module.exports?module.exports=o:t.Promise||(t.Promise=o)}(this);
+
 
         function from_string(str) {
                 if (typeof TextEncoder === "function") {
@@ -19763,7 +19767,9 @@ d=(q&65535)+(O&65535);b=(q>>>16)+(O>>>16)+(d>>>16);c=(n&65535)+(N&65535)+(b>>>16
         }
 
         //---------------------------------------------------------------------------
-        // ;
+        // 
+function memzero(bytes) { if (! bytes instanceof Uint8Array) { throw new TypeError("Only Uint8Array instances can be wiped"); } for (var i = 0 | 0, j = bytes.length; i < j; i++) { bytes[i] = 0; } }
+;
 
 var rsaKeygen, pemJwk;
 if (isNode) {
@@ -19806,6 +19812,15 @@ function exportJWK (key) {
 	}).then(function (jwk) {
 		return from_string(JSON.stringify(jwk));
 	});
+}
+
+function clearMemory (data) {
+	if (data instanceof Uint8Array) {
+		memzero(data);
+	}
+	else if (isNode && data instanceof Buffer) {
+		data.fill(0);
+	}
 }
 
 function decodeBase64 (data) {
@@ -19917,7 +19932,16 @@ function encrypt (plaintext, password) {
 			var buf2	= cipher.final();
 			var buf3	= cipher.getAuthTag();
 
-			return new Uint8Array(Buffer.concat([o.iv, o.salt, buf1, buf2, buf3]));
+			var cyphertext	= new Uint8Array(Buffer.concat([o.iv, o.salt, buf1, buf2, buf3]));
+
+			clearMemory(o.iv);
+			clearMemory(o.salt);
+			clearMemory(o.key);
+			clearMemory(buf1);
+			clearMemory(buf2);
+			clearMemory(buf3);
+
+			return cyphertext;
 		});
 	}
 	else {
@@ -19943,6 +19967,11 @@ function encrypt (plaintext, password) {
 			cyphertext.set(o.salt, aes.ivBytes);
 			cyphertext.set(encrypted, aes.ivBytes + aes.keyDerivation.saltBytes);
 
+			clearMemory(o.iv);
+			clearMemory(o.salt);
+			clearMemory(o.key);
+			clearMemory(encrypted);
+
 			return cyphertext;
 		});
 	}
@@ -19962,6 +19991,8 @@ function decrypt (cyphertext, password) {
 	}).then(function (results) {
 		var iv	= results[0];
 		var key	= results[1];
+
+		var decrypted;
 
 		if (isNode) {
 			var encrypted	= new Uint8Array(
@@ -19989,7 +20020,10 @@ function decrypt (cyphertext, password) {
 			var buf1	= decipher.update(new Buffer(encrypted));
 			var buf2	= decipher.final();
 
-			return Buffer.concat([buf1, buf2]);
+			decrypted	= Buffer.concat([buf1, buf2]);;
+
+			clearMemory(buf1);
+			clearMemory(buf2);
 		}
 		else {
 			var encrypted	= new Uint8Array(
@@ -19997,7 +20031,7 @@ function decrypt (cyphertext, password) {
 				aes.ivBytes + aes.keyDerivation.saltBytes
 			);
 
-			return crypto.subtle.decrypt(
+			decrypted	= crypto.subtle.decrypt(
 				{
 					name: aes.algorithm,
 					iv: iv,
@@ -20007,7 +20041,14 @@ function decrypt (cyphertext, password) {
 				encrypted
 			);
 		}
-	}).then(function (decrypted) {
+
+		return Promise.all([key, decrypted]);
+	}).then(function (results) {
+		var key			= results[0];
+		var decrypted	= results[1];
+
+		clearMemory(key);
+
 		return new Uint8Array(decrypted);
 	});
 }
@@ -20079,32 +20120,55 @@ var rsa	= {
 
 	signDetached: function (message, privateKey) {
 		return importJWK(privateKey, 'sign').then(function (sk) {
+			var signature;
+
 			if (isNode) {
-				var signer	= crypto.createSign(rsa.algorithm);
-				signer.write(new Buffer(message));
+				var messageBuffer	= new Buffer(message);
+				var signer			= crypto.createSign(rsa.algorithm);
+				signer.write(messageBuffer);
 				signer.end();
 
-				return signer.sign(sk);
+				signature	= signer.sign(sk);
+
+				clearMemory(messageBuffer);
 			}
 			else {
-				return crypto.subtle.sign(rsa.algorithm, sk, message);
+				signature	= crypto.subtle.sign(rsa.algorithm, sk, message);
 			}
-		}).then(function (signature) {
+
+			return Promise.all([sk, signature]);
+		}).then(function (results) {
+			var sk			= results[0];
+			var signature	= results[1];
+
+			clearMemory(sk);
+
 			return new Uint8Array(signature);
 		});
 	},
 
 	verifyDetached: function (signature, message, publicKey) {
 		return importJWK(publicKey, 'verify').then(function (pk) {
+			var isValid;
+
 			if (isNode) {
 				var verifier	= crypto.createVerify(rsa.algorithm);
 				verifier.update(new Buffer(message));
 
-				return verifier.verify(pk, signature);
+				isValid	= verifier.verify(pk, signature);
 			}
 			else {
-				return crypto.subtle.verify(rsa.algorithm, pk, signature, message);
+				isValid	= crypto.subtle.verify(rsa.algorithm, pk, signature, message);
 			}
+
+			return Promise.all([pk, isValid]);
+		}).then(function (results) {
+			var pk		= results[0];
+			var isValid	= results[1];
+
+			clearMemory(pk);
+
+			return isValid;
 		});
 	}
 };
@@ -20117,8 +20181,11 @@ var superSphincs	= {
 	hashBytes: 64,
 
 	hash: function (message) {
+		var messageBinary;
+		var shouldClearMessageBinary	= typeof message === 'string';
+
 		return Promise.resolve().then(function () {
-			var messageBinary	= decodeString(message);
+			messageBinary	= decodeString(message);
 
 			if (isNode) {
 				var hasher	= crypto.createHash('sha512');
@@ -20135,9 +20202,17 @@ var superSphincs	= {
 				);
 			}
 		}).then(function (hash) {
+			if (shouldClearMessageBinary) {
+				clearMemory(messageBinary);
+			}
+
 			var binary	= new Uint8Array(hash);
 			return {binary: binary, hex: to_hex(binary)};
 		}).catch(function () {
+			if (shouldClearMessageBinary) {
+				clearMemory(messageBinary);
+			}
+
 			var hex	= sha512(encodeString(message));
 			return {binary: from_hex(hex), hex: hex};
 		});
@@ -20158,11 +20233,18 @@ var superSphincs	= {
 			keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyBytes);
 			keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyBytes);
 
+			clearMemory(sphincsKeyPair.privateKey);
+			clearMemory(rsaKeyPair.privateKey);
+			clearMemory(sphincsKeyPair.publicKey);
+			clearMemory(rsaKeyPair.publicKey);
+
 			return keyPair;
 		});
 	},
 
 	sign: function (message, privateKey, getHash) {
+		var shouldClearMessage	= typeof message === 'string';
+
 		return superSphincs.signDetached(message, privateKey, true, true).then(function (o) {
 			message		= decodeString(message);
 
@@ -20178,12 +20260,26 @@ var superSphincs	= {
 				hash: o.hash.hex
 			};
 
+			if (shouldClearMessage) {
+				clearMemory(message);
+			}
+
+			clearMemory(signed);
+			clearMemory(o.signature);
+			clearMemory(o.hash.binary);
+
 			if (getHash) {
 				return result;
 			}
 			else {
 				return result.signed;
 			}
+		}).catch(function (err) {
+			if (shouldClearMessage) {
+				clearMemory(message);
+			}
+
+			throw err;
 		});
 	},
 
@@ -20212,6 +20308,14 @@ var superSphincs	= {
 				{signature: encodeBase64(signature), hash: hash.hex}
 			;
 
+			if (!noEncode) {
+				clearMemory(signature);
+				clearMemory(hash.binary);
+			}
+
+			clearMemory(sphincsSignature);
+			clearMemory(rsaSignature);
+
 			if (getHash) {
 				return result;
 			}
@@ -20222,6 +20326,8 @@ var superSphincs	= {
 	},
 
 	open: function (signed, publicKey, getHash) {
+		var shouldClearSigned	= typeof signed === 'string';
+
 		return Promise.resolve().then(function () {
 			signed	= decodeBase64(signed);
 
@@ -20245,6 +20351,10 @@ var superSphincs	= {
 			var message	= results[0];
 			var o		= results[1];
 
+			if (shouldClearSigned) {
+				clearMemory(signed);
+			}
+
 			if (o.isValid) {
 				var result	= {verified: message, hash: o.hash};
 
@@ -20258,10 +20368,18 @@ var superSphincs	= {
 			else {
 				throw 'Failed to open SuperSPHINCS signed message.';
 			}
+		}).catch(function (err) {
+			if (shouldClearSigned) {
+				clearMemory(signed);
+			}
+
+			throw err;
 		});
 	},
 
 	verifyDetached: function (signature, message, publicKey, getHash) {
+		var shouldClearSignature	= typeof signature === 'string';
+
 		return superSphincs.hash(message).then(function (hash) {
 			signature	= decodeBase64(signature);
 
@@ -20294,13 +20412,25 @@ var superSphincs	= {
 				hash: hash.hex
 			};
 
+			if (shouldClearSignature) {
+				clearMemory(signature);
+			}
+
+			clearMemory(hash.binary);
+
 			if (getHash) {
 				return result;
 			}
 			else {
 				return result.isValid;
 			}
-		});
+		}).catch(function (err) {
+			if (shouldClearSignature) {
+				clearMemory(signature);
+			}
+
+			throw err;
+		});;
 	},
 
 	exportKeys: function (keyPair, password) {
@@ -20358,7 +20488,13 @@ var superSphincs	= {
 					encrypt(rsaPrivateKey, password),
 					encrypt(sphincsPrivateKey, password),
 					encrypt(superSphincsPrivateKey, password)
-				]);
+				]).then(function (results) {
+					clearMemory(superSphincsPrivateKey);
+					clearMemory(sphincsPrivateKey);
+					clearMemory(rsaPrivateKey);
+
+					return results;
+				});
 			}
 			else {
 				return [
@@ -20376,11 +20512,21 @@ var superSphincs	= {
 				};
 			}
 
-			return {
-				rsa: encodeBase64(results[0]),
-				sphincs: encodeBase64(results[1]),
-				superSphincs: encodeBase64(results[2])
+			var rsaPrivateKey			= results[0];
+			var sphincsPrivateKey		= results[1];
+			var superSphincsPrivateKey	= results[2];
+
+			var privateKeyData	= {
+				rsa: encodeBase64(rsaPrivateKey),
+				sphincs: encodeBase64(sphincsPrivateKey),
+				superSphincs: encodeBase64(superSphincsPrivateKey)
 			};
+
+			clearMemory(superSphincsPrivateKey);
+			clearMemory(sphincsPrivateKey);
+			clearMemory(rsaPrivateKey);
+
+			return privateKeyData;
 		}).then(function (privateKeyData) {
 			return {
 				private: privateKeyData,
