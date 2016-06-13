@@ -19470,13 +19470,13 @@ Module._randombytes_stir();
 
 
 var sphincs	= {
-	publicKeyLength: Module._sphincsjs_public_key_bytes(),
-	privateKeyLength: Module._sphincsjs_secret_key_bytes(),
-	signatureLength: Module._sphincsjs_signature_bytes(),
+	publicKeyBytes: Module._sphincsjs_public_key_bytes(),
+	privateKeyBytes: Module._sphincsjs_secret_key_bytes(),
+	bytes: Module._sphincsjs_signature_bytes(),
 
 	keyPair: function () {
-		var publicKeyBuffer		= Module._malloc(sphincs.publicKeyLength);
-		var privateKeyBuffer	= Module._malloc(sphincs.privateKeyLength);
+		var publicKeyBuffer		= Module._malloc(sphincs.publicKeyBytes);
+		var privateKeyBuffer	= Module._malloc(sphincs.privateKeyBytes);
 
 		try {
 			var returnValue	= Module._crypto_sign_sphincs_keypair(
@@ -19485,8 +19485,8 @@ var sphincs	= {
 			);
 
 			return dataReturn(returnValue, {
-				publicKey: dataResult(publicKeyBuffer, sphincs.publicKeyLength),
-				privateKey: dataResult(privateKeyBuffer, sphincs.privateKeyLength)
+				publicKey: dataResult(publicKeyBuffer, sphincs.publicKeyBytes),
+				privateKey: dataResult(privateKeyBuffer, sphincs.privateKeyBytes)
 			});
 		}
 		finally {
@@ -19496,11 +19496,11 @@ var sphincs	= {
 	},
 
 	sign: function (message, privateKey) {
-		var signedLength		= message.length + sphincs.signatureLength;
+		var signedBytes		= message.length + sphincs.bytes;
 
-		var signedBuffer		= Module._malloc(signedLength);
+		var signedBuffer		= Module._malloc(signedBytes);
 		var messageBuffer		= Module._malloc(message.length);
-		var privateKeyBuffer	= Module._malloc(sphincs.privateKeyLength);
+		var privateKeyBuffer	= Module._malloc(sphincs.privateKeyBytes);
 
 		Module.writeArrayToMemory(message, messageBuffer);
 		Module.writeArrayToMemory(privateKey, privateKeyBuffer);
@@ -19514,7 +19514,7 @@ var sphincs	= {
 				privateKeyBuffer
 			);
 
-			return dataReturn(returnValue, dataResult(signedBuffer, signedLength));
+			return dataReturn(returnValue, dataResult(signedBuffer, signedBytes));
 		}
 		finally {
 			dataFree(signedBuffer);
@@ -19527,16 +19527,16 @@ var sphincs	= {
 		return new Uint8Array(
 			sphincs.sign(message, privateKey).buffer,
 			0,
-			sphincs.signatureLength
+			sphincs.bytes
 		);
 	},
 
 	open: function (signed, publicKey) {
-		var openedLength	= signed.length - sphincs.signatureLength;
+		var openedBytes	= signed.length - sphincs.bytes;
 
-		var openedBuffer	= Module._malloc(openedLength);
+		var openedBuffer	= Module._malloc(openedBytes);
 		var signedBuffer	= Module._malloc(signed.length);
-		var publicKeyBuffer	= Module._malloc(sphincs.publicKeyLength);
+		var publicKeyBuffer	= Module._malloc(sphincs.publicKeyBytes);
 
 		Module.writeArrayToMemory(signed, signedBuffer);
 		Module.writeArrayToMemory(publicKey, publicKeyBuffer);
@@ -19550,7 +19550,7 @@ var sphincs	= {
 				publicKeyBuffer
 			);
 
-			return dataReturn(returnValue, dataResult(openedBuffer, openedLength));
+			return dataReturn(returnValue, dataResult(openedBuffer, openedBytes));
 		}
 		finally {
 			dataFree(openedBuffer);
@@ -19560,9 +19560,9 @@ var sphincs	= {
 	},
 
 	verifyDetached: function (signature, message, publicKey) {
-		var signed	= new Uint8Array(sphincs.signatureLength + message.length);
+		var signed	= new Uint8Array(sphincs.bytes + message.length);
 		signed.set(signature);
-		signed.set(message, sphincs.signatureLength);
+		signed.set(message, sphincs.bytes);
 
 		try {
 			sphincs.open(signed, publicKey);
@@ -19843,7 +19843,7 @@ function deriveEncryptionKey (password, salt) {
 				new Buffer(password),
 				new Buffer(salt),
 				aes.keyDerivation.iterations,
-				aes.keyLength,
+				aes.keyBytes,
 				aes.keyDerivation.hashFunction,
 				function (err, key) {
 					if (err) {
@@ -19880,7 +19880,7 @@ function deriveEncryptionKey (password, salt) {
 				keyOrigin,
 				{
 					name: aes.algorithm,
-					length: aes.bitLength
+					length: aes.keyBits
 				},
 				false,
 				['encrypt', 'decrypt']
@@ -19892,13 +19892,13 @@ function deriveEncryptionKey (password, salt) {
 function encrypt (plaintext, password) {
 	var setup	= Promise.resolve().then(function () {
 		var iv		= isNode ?
-			crypto.randomBytes(aes.ivLength) :
-			crypto.getRandomValues(new Uint8Array(aes.ivLength))
+			crypto.randomBytes(aes.ivBytes) :
+			crypto.getRandomValues(new Uint8Array(aes.ivBytes))
 		;
 
 		var salt	= isNode ?
-			crypto.randomBytes(aes.keyDerivation.saltLength) :
-			crypto.getRandomValues(new Uint8Array(aes.keyDerivation.saltLength))
+			crypto.randomBytes(aes.keyDerivation.saltBytes) :
+			crypto.getRandomValues(new Uint8Array(aes.keyDerivation.saltBytes))
 		;
 
 		return Promise.all([iv, salt, deriveEncryptionKey(password, salt)]);
@@ -19926,7 +19926,7 @@ function encrypt (plaintext, password) {
 				{
 					name: aes.algorithm,
 					iv: o.iv,
-					tagLength: aes.tagLengthBytes
+					tagLength: aes.tagBits
 				},
 				o.key,
 				plaintext
@@ -19936,12 +19936,12 @@ function encrypt (plaintext, password) {
 			var encrypted	= new Uint8Array(results[1]);
 
 			var cyphertext	= new Uint8Array(
-				aes.ivLength + aes.keyDerivation.saltLength + encrypted.length
+				aes.ivBytes + aes.keyDerivation.saltBytes + encrypted.length
 			);
 
 			cyphertext.set(o.iv);
-			cyphertext.set(o.salt, aes.ivLength);
-			cyphertext.set(encrypted, aes.ivLength + aes.keyDerivation.saltLength);
+			cyphertext.set(o.salt, aes.ivBytes);
+			cyphertext.set(encrypted, aes.ivBytes + aes.keyDerivation.saltBytes);
 
 			return cyphertext;
 		});
@@ -19950,12 +19950,12 @@ function encrypt (plaintext, password) {
 
 function decrypt (cyphertext, password) {
 	return Promise.resolve().then(function () {
-		var iv		= new Uint8Array(cyphertext.buffer, 0, aes.ivLength);
+		var iv		= new Uint8Array(cyphertext.buffer, 0, aes.ivBytes);
 
 		var salt	= new Uint8Array(
 			cyphertext.buffer,
-			aes.ivLength,
-			aes.keyDerivation.saltLength
+			aes.ivBytes,
+			aes.keyDerivation.saltBytes
 		);
 
 		return Promise.all([iv, deriveEncryptionKey(password, salt)]);
@@ -19966,16 +19966,16 @@ function decrypt (cyphertext, password) {
 		if (isNode) {
 			var encrypted	= new Uint8Array(
 				cyphertext.buffer,
-				aes.ivLength + aes.keyDerivation.saltLength,
+				aes.ivBytes + aes.keyDerivation.saltBytes,
 				cyphertext.length -
-					aes.ivLength -
-					aes.keyDerivation.saltLength -
-					aes.tagLength
+					aes.ivBytes -
+					aes.keyDerivation.saltBytes -
+					aes.tagBytes
 			);
 
 			var authTag		= new Uint8Array(
 				cyphertext.buffer,
-				cyphertext.length - aes.tagLength
+				cyphertext.length - aes.tagBytes
 			);
 
 			var decipher	= crypto.createDecipheriv(
@@ -19994,14 +19994,14 @@ function decrypt (cyphertext, password) {
 		else {
 			var encrypted	= new Uint8Array(
 				cyphertext.buffer,
-				aes.ivLength + aes.keyDerivation.saltLength
+				aes.ivBytes + aes.keyDerivation.saltBytes
 			);
 
 			return crypto.subtle.decrypt(
 				{
 					name: aes.algorithm,
 					iv: iv,
-					tagLength: aes.tagLengthBytes
+					tagLength: aes.tagBits
 				},
 				key,
 				encrypted
@@ -20015,21 +20015,19 @@ function decrypt (cyphertext, password) {
 
 var aes	= {
 	algorithm: isNode ? 'aes-256-gcm' : 'AES-GCM',
-	ivLength: 12,
-	keyLength: 32,
-	bitLength: 256,
-	tagLength: 16,
-	tagLengthBytes: null,
+	ivBytes: 12,
+	keyBytes: 32,
+	keyBits: 256,
+	tagBytes: 16,
+	tagBits: 128,
 
 	keyDerivation: {
 		algorithm: 'PBKDF2',
 		hashFunction: isNode ? 'sha512' : 'SHA-512',
 		iterations: 1000000,
-		saltLength: 32
+		saltBytes: 32
 	}
 };
-
-aes.tagLengthBytes	= aes.tagLength * 8;
 
 
 var rsa	= {
@@ -20045,9 +20043,9 @@ var rsa	= {
 		}
 	,
 
-	publicKeyLength: 450,
-	privateKeyLength: 1700,
-	signatureLength: 256,
+	publicKeyBytes: 450,
+	privateKeyBytes: 1700,
+	bytes: 256,
 
 	keyPair: function () {
 		return Promise.resolve().then(function () {
@@ -20113,18 +20111,18 @@ var rsa	= {
 
 
 var superSphincs	= {
-	publicKeyLength: rsa.publicKeyLength + sphincs.publicKeyLength,
-	privateKeyLength: rsa.privateKeyLength + sphincs.privateKeyLength,
-	signatureLength: rsa.signatureLength + sphincs.signatureLength,
-	hashLength: 64,
+	publicKeyBytes: rsa.publicKeyBytes + sphincs.publicKeyBytes,
+	privateKeyBytes: rsa.privateKeyBytes + sphincs.privateKeyBytes,
+	bytes: rsa.bytes + sphincs.bytes,
+	hashBytes: 64,
 
 	hash: function (message) {
 		return Promise.resolve().then(function () {
-			var messageBytes	= decodeString(message);
+			var messageBinary	= decodeString(message);
 
 			if (isNode) {
 				var hasher	= crypto.createHash('sha512');
-				hasher.update(new Buffer(messageBytes));
+				hasher.update(new Buffer(messageBinary));
 
 				return hasher.digest();
 			}
@@ -20133,15 +20131,15 @@ var superSphincs	= {
 					{
 						name: 'SHA-512'
 					},
-					messageBytes
+					messageBinary
 				);
 			}
 		}).then(function (hash) {
-			var bytes	= new Uint8Array(hash);
-			return {bytes: bytes, hex: to_hex(bytes)};
+			var binary	= new Uint8Array(hash);
+			return {binary: binary, hex: to_hex(binary)};
 		}).catch(function () {
 			var hex	= sha512(encodeString(message));
-			return {bytes: from_hex(hex), hex: hex};
+			return {binary: from_hex(hex), hex: hex};
 		});
 	},
 
@@ -20151,14 +20149,14 @@ var superSphincs	= {
 
 			var keyPair	= {
 				keyType: 'supersphincs',
-				publicKey: new Uint8Array(superSphincs.publicKeyLength),
-				privateKey: new Uint8Array(superSphincs.privateKeyLength)
+				publicKey: new Uint8Array(superSphincs.publicKeyBytes),
+				privateKey: new Uint8Array(superSphincs.privateKeyBytes)
 			};
 
 			keyPair.publicKey.set(rsaKeyPair.publicKey);
 			keyPair.privateKey.set(rsaKeyPair.privateKey);
-			keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyLength);
-			keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyLength);
+			keyPair.publicKey.set(sphincsKeyPair.publicKey, rsa.publicKeyBytes);
+			keyPair.privateKey.set(sphincsKeyPair.privateKey, rsa.privateKeyBytes);
 
 			return keyPair;
 		});
@@ -20169,11 +20167,11 @@ var superSphincs	= {
 			message		= decodeString(message);
 
 			var signed	= new Uint8Array(
-				superSphincs.signatureLength + message.length
+				superSphincs.bytes + message.length
 			);
 
 			signed.set(o.signature);
-			signed.set(message, superSphincs.signatureLength);
+			signed.set(message, superSphincs.bytes);
 
 			var result	= {
 				signed: encodeBase64(signed),
@@ -20192,22 +20190,22 @@ var superSphincs	= {
 	signDetached: function (message, privateKey, getHash, noEncode) {
 		return superSphincs.hash(message).then(function (hash) {
 			return Promise.all([hash, rsa.signDetached(
-				hash.bytes,
-				new Uint8Array(privateKey.buffer, 0, rsa.privateKeyLength)
+				hash.binary,
+				new Uint8Array(privateKey.buffer, 0, rsa.privateKeyBytes)
 			)]);
 		}).then(function (results) {
 			var hash			= results[0];
 			var rsaSignature	= results[1];
 
 			var sphincsSignature	= sphincs.signDetached(
-				hash.bytes,
-				new Uint8Array(privateKey.buffer, rsa.privateKeyLength)
+				hash.binary,
+				new Uint8Array(privateKey.buffer, rsa.privateKeyBytes)
 			);
 
-			var signature	= new Uint8Array(superSphincs.signatureLength);
+			var signature	= new Uint8Array(superSphincs.bytes);
 
 			signature.set(rsaSignature);
-			signature.set(sphincsSignature, rsa.signatureLength);
+			signature.set(sphincsSignature, rsa.bytes);
 
 			var result	= noEncode ?
 				{signature: signature, hash: hash} :
@@ -20230,11 +20228,11 @@ var superSphincs	= {
 			var signature	= new Uint8Array(
 				signed.buffer,
 				0,
-				superSphincs.signatureLength
+				superSphincs.bytes
 			);
 
 			var message		= encodeString(
-				new Uint8Array(signed.buffer, superSphincs.signatureLength)
+				new Uint8Array(signed.buffer, superSphincs.bytes)
 			);
 
 			return Promise.all([message, superSphincs.verifyDetached(
@@ -20270,9 +20268,9 @@ var superSphincs	= {
 			return Promise.all([
 				hash,
 				rsa.verifyDetached(
-					new Uint8Array(signature.buffer, 0, rsa.signatureLength),
-					hash.bytes,
-					new Uint8Array(publicKey.buffer, 0, rsa.publicKeyLength)
+					new Uint8Array(signature.buffer, 0, rsa.bytes),
+					hash.binary,
+					new Uint8Array(publicKey.buffer, 0, rsa.publicKeyBytes)
 				).catch(function () {
 					return true;
 				})
@@ -20284,11 +20282,11 @@ var superSphincs	= {
 			var sphincsIsValid	= sphincs.verifyDetached(
 				new Uint8Array(
 					signature.buffer,
-					rsa.signatureLength,
-					sphincs.signatureLength
+					rsa.bytes,
+					sphincs.bytes
 				),
-				hash.bytes,
-				new Uint8Array(publicKey.buffer, rsa.publicKeyLength)
+				hash.binary,
+				new Uint8Array(publicKey.buffer, rsa.publicKeyBytes)
 			);
 
 			var result	= {
@@ -20312,48 +20310,48 @@ var superSphincs	= {
 			}
 
 			var rsaPrivateKey			= new Uint8Array(
-				rsa.publicKeyLength +
-				rsa.privateKeyLength
+				rsa.publicKeyBytes +
+				rsa.privateKeyBytes
 			);
 
 			var sphincsPrivateKey		= new Uint8Array(
-				sphincs.publicKeyLength +
-				sphincs.privateKeyLength
+				sphincs.publicKeyBytes +
+				sphincs.privateKeyBytes
 			);
 
 			var superSphincsPrivateKey	= new Uint8Array(
-				superSphincs.publicKeyLength +
-				superSphincs.privateKeyLength
+				superSphincs.publicKeyBytes +
+				superSphincs.privateKeyBytes
 			);
 
 			rsaPrivateKey.set(new Uint8Array(
 				keyPair.publicKey.buffer,
 				0,
-				rsa.publicKeyLength
+				rsa.publicKeyBytes
 			));
 			rsaPrivateKey.set(
 				new Uint8Array(
 					keyPair.privateKey.buffer,
 					0,
-					rsa.privateKeyLength
+					rsa.privateKeyBytes
 				),
-				rsa.publicKeyLength
+				rsa.publicKeyBytes
 			);
 
 			sphincsPrivateKey.set(new Uint8Array(
 				keyPair.publicKey.buffer,
-				rsa.publicKeyLength
+				rsa.publicKeyBytes
 			));
 			sphincsPrivateKey.set(
 				new Uint8Array(
 					keyPair.privateKey.buffer,
-					rsa.privateKeyLength
+					rsa.privateKeyBytes
 				),
-				sphincs.publicKeyLength
+				sphincs.publicKeyBytes
 			);
 
 			superSphincsPrivateKey.set(keyPair.publicKey);
-			superSphincsPrivateKey.set(keyPair.privateKey, superSphincs.publicKeyLength);
+			superSphincsPrivateKey.set(keyPair.privateKey, superSphincs.publicKeyBytes);
 
 			if (password) {
 				return Promise.all([
@@ -20390,11 +20388,11 @@ var superSphincs	= {
 					rsa: encodeBase64(new Uint8Array(
 						keyPair.publicKey.buffer,
 						0,
-						rsa.publicKeyLength
+						rsa.publicKeyBytes
 					)),
 					sphincs: encodeBase64(new Uint8Array(
 						keyPair.publicKey.buffer,
-						rsa.publicKeyLength
+						rsa.publicKeyBytes
 					)),
 					superSphincs: encodeBase64(keyPair.publicKey)
 				}
@@ -20440,7 +20438,7 @@ var superSphincs	= {
 			}
 		}).then(function (results) {
 			var keyPair	= {
-				publicKey: new Uint8Array(superSphincs.publicKeyLength),
+				publicKey: new Uint8Array(superSphincs.publicKeyBytes),
 				privateKey: null
 			};
 
@@ -20448,7 +20446,7 @@ var superSphincs	= {
 				return keyPair;
 			}
 
-			keyPair.privateKey	= new Uint8Array(superSphincs.privateKeyLength);
+			keyPair.privateKey	= new Uint8Array(superSphincs.privateKeyBytes);
 
 			if (results.length === 1) {
 				var superSphincsPrivateKey	= results[0];
@@ -20456,12 +20454,12 @@ var superSphincs	= {
 				keyPair.publicKey.set(new Uint8Array(
 					superSphincsPrivateKey.buffer,
 					0,
-					superSphincs.publicKeyLength
+					superSphincs.publicKeyBytes
 				));
 
 				keyPair.privateKey.set(new Uint8Array(
 					superSphincsPrivateKey.buffer,
-					superSphincs.publicKeyLength
+					superSphincs.publicKeyBytes
 				));
 			}
 			else {
@@ -20472,30 +20470,30 @@ var superSphincs	= {
 					new Uint8Array(
 						rsaPrivateKey.buffer,
 						0,
-						rsa.publicKeyLength
+						rsa.publicKeyBytes
 					)
 				);
 				keyPair.publicKey.set(
 					new Uint8Array(
 						sphincsPrivateKey.buffer,
 						0,
-						sphincs.publicKeyLength
+						sphincs.publicKeyBytes
 					),
-					rsa.publicKeyLength
+					rsa.publicKeyBytes
 				);
 
 				keyPair.privateKey.set(
 					new Uint8Array(
 						rsaPrivateKey.buffer,
-						rsa.publicKeyLength
+						rsa.publicKeyBytes
 					)
 				);
 				keyPair.privateKey.set(
 					new Uint8Array(
 						sphincsPrivateKey.buffer,
-						sphincs.publicKeyLength
+						sphincs.publicKeyBytes
 					),
-					rsa.privateKeyLength
+					rsa.privateKeyBytes
 				);
 			}
 
@@ -20509,7 +20507,7 @@ var superSphincs	= {
 					keyPair.publicKey.set(decodeBase64(keyData.public.rsa));
 					keyPair.publicKey.set(
 						decodeBase64(keyData.public.sphincs),
-						rsa.publicKeyLength
+						rsa.publicKeyBytes
 					);
 				}
 			}
