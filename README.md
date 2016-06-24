@@ -47,14 +47,14 @@ SPHINCS signature.
 
 		superSphincs.exportKeys(keyPair, 'secret passphrase').then((keyData /* : {
 			public: {
-				rsa: Uint8Array;
-				sphincs: Uint8Array;
-				superSphincs: Uint8Array;
+				rsa: string;
+				sphincs: string;
+				superSphincs: string;
 			};
 			private: {
-				rsa: Uint8Array;
-				sphincs: Uint8Array;
-				superSphincs: Uint8Array;
+				rsa: string;
+				sphincs: string;
+				superSphincs: string;
 			};
 		} */) => {
 			/* Can save exported keys to disk or whatever */
