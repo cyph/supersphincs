@@ -19773,6 +19773,7 @@ function memzero(bytes) { if (! bytes instanceof Uint8Array) { throw new TypeErr
 
 var rsaKeygen, pemJwk;
 if (isNode) {
+	crypto		= require('crypto');
 	rsaKeygen	= require('rsa-keygen');
 	pemJwk		= require('pem-jwk');
 }

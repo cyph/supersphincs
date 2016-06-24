@@ -2,6 +2,7 @@
 
 var rsaKeygen, pemJwk;
 if (isNode) {
+	crypto		= require('crypto');
 	rsaKeygen	= require('rsa-keygen');
 	pemJwk		= require('pem-jwk');
 }
