@@ -906,3 +906,6 @@ if (isNode) {
 else {
 	self.superSphincs	= superSphincs;
 }
+
+
+}());

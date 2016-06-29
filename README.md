@@ -1,4 +1,4 @@
-# supersphincs.js
+# supersphincs
 
 ## Overview
 

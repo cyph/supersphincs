@@ -1,3 +1,6 @@
+(function () {
+
+
 var isNode	= false;
 if (typeof module !== 'undefined' && module.exports) {
 	isNode	= true;
@@ -20677,3 +20680,6 @@ if (isNode) {
 else {
 	self.superSphincs	= superSphincs;
 }
+
+
+}());
