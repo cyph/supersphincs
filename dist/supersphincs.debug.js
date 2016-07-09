@@ -19837,7 +19837,7 @@ function decodeBase64 (data) {
 function encodeBase64 (data) {
 	return typeof data === 'string' ?
 		data :
-		to_base64(data).replace(/\n/g, '')
+		to_base64(data).replace(/\s+/g, '')
 	;
 }
 
