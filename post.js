@@ -410,7 +410,7 @@ var superSphincs	= {
 	bytes: rsa.bytes + sphincs.bytes,
 	hashBytes: 64,
 
-	hash: function (message) {
+	hash: function (message, onlyBinary) {
 		var messageBinary;
 		var shouldClearMessageBinary	= typeof message === 'string';
 
@@ -437,14 +437,25 @@ var superSphincs	= {
 			}
 
 			var binary	= new Uint8Array(hash);
+
+			if (onlyBinary) {
+				return binary;
+			}
+
 			return {binary: binary, hex: to_hex(binary)};
 		}).catch(function () {
 			if (shouldClearMessageBinary) {
 				clearMemory(messageBinary);
 			}
 
-			var hex	= sha512(encodeString(message));
-			return {binary: from_hex(hex), hex: hex};
+			var hex		= sha512(encodeString(message));
+			var binary	= from_hex(hex);
+
+			if (onlyBinary) {
+				return binary;
+			}
+
+			return {binary: binary, hex: hex};
 		});
 	},
 
