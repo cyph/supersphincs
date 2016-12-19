@@ -2,7 +2,7 @@ all:
 	rm -rf dist sphincs.js sodiumhelpers js-sha512 promise-polyfill 2> /dev/null
 	mkdir dist
 
-	git clone git@github.com:cyph/sphincs.js.git
+	git clone https://github.com/cyph/sphincs.js.git
 
 	mkdir sodiumhelpers
 	wget https://raw.githubusercontent.com/jedisct1/libsodium.js/9a8b4f9/wrapper/wrap-template.js -O sodiumhelpers/main.js
@@ -27,24 +27,24 @@ all:
 	echo >> dist/supersphincs.debug.js
 	cat post.js >> dist/supersphincs.debug.js
 
-	uglifyjs dist/supersphincs.debug.js > dist/supersphincs.js
+	uglifyjs dist/supersphincs.debug.js -o dist/supersphincs.js
 
-	node -e ' \
-		var fs = require("fs"); \
-		for (var file of ["dist/supersphincs.js", "dist/supersphincs.debug.js"]) { \
+	node -e " \
+		var fs = require('fs'); \
+		for (var file of ['dist/supersphincs.js', 'dist/supersphincs.debug.js']) { \
 			fs.writeFileSync( \
 				file, \
 				fs.readFileSync(file). \
 					toString(). \
 					replace( \
-						"BALLS()", \
+						'BALLS()', \
 						fs.readFileSync( \
-							"sphincs.js/" + file.replace("super", "") \
+							'sphincs.js/' + file.replace('super', '') \
 						).toString().trim() \
 					) \
 			); \
 		}; \
-	'
+	"
 
 	rm -rf sphincs.js sodiumhelpers js-sha512 promise-polyfill
 
