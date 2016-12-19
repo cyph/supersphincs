@@ -19,107 +19,107 @@ SPHINCS signature.
 
 ## Example Usage
 
-	const message	= 'hello';
+	(async () => {
+		const keyPair /*: {privateKey: Uint8Array; publicKey: Uint8Array} */ =
+			await superSphincs.keyPair()
+		;
 
-	superSphincs.keyPair().then((keyPair /* : {publicKey: Uint8Array; privateKey: Uint8Array;} */) => {
+		const message /*: string */ = 'hello';
 
-		superSphincs.sign(
-			message,
-			keyPair.privateKey
-		).then((signed /* : string */) => superSphincs.open(
-			signed,
-			keyPair.publicKey
-		)).then((verified /* : string */) =>
-			console.log(verified) /* Same as message */
-		);
+		/* Combined signatures */
 
-		superSphincs.signDetached(
-			message,
-			keyPair.privateKey
-		).then((signature /* : string */) => superSphincs.verifyDetached(
-			signature,
-			message,
-			keyPair.publicKey
-		)).then((isValid /* : boolean */) =>
-			console.log(isValid) /* true */
-		);
+		const signed /*: string */ =
+			await superSphincs.sign(message, keyPair.privateKey)
+		;
 
+		const verified /*: string */ =
+			await superSphincs.open(signed, keyPair.publicKey) // same as message
+		;
 
-		superSphincs.exportKeys(keyPair, 'secret passphrase').then((keyData /* : {
-			public: {
-				rsa: string;
-				sphincs: string;
-				superSphincs: string;
-			};
+		/* Detached signatures */
+		
+		const signature /*: Uint8Array */ =
+			await superSphincs.signDetached(message, keyPair.privateKey)
+		;
+
+		const isValid /*: boolean */ =
+			await superSphincs.verifyDetached(signature, message, keyPair.publicKey) // true
+		;
+
+		/* Export and optionally encrypt keys */
+
+		const keyData /*: {
 			private: {
 				rsa: string;
 				sphincs: string;
 				superSphincs: string;
 			};
-		} */) => {
-			/* Can save exported keys to disk or whatever */
+			public: {
+				rsa: string;
+				sphincs: string;
+				superSphincs: string;
+			};
+		} */ =
+			await superSphincs.exportKeys(keyPair, 'secret passphrase')
+		;
 
-			if (typeof localStorage === 'undefined') {
-				localStorage	= {};
+		// May now save exported keys to disk (or whatever)
+		localStorage.superSphincsPrivateKey	= keyData.private.superSphincs;
+		localStorage.sphincsPrivateKey		= keyData.private.sphincs;
+		localStorage.rsaPrivateKey			= keyData.private.rsa;
+		localStorage.superSphincsPublicKey	= keyData.public.superSphincs;
+		localStorage.sphincsPublicKey		= keyData.public.sphincs;
+		localStorage.rsaPublicKey			= keyData.public.rsa;
+
+
+		/* Reconstruct an exported key using either the superSphincs
+			value or any pair of valid sphincs and rsa values */
+
+		const keyPair1 = await superSphincs.importKeys({
+			public: {
+				rsa: localStorage.rsaPublicKey,
+				sphincs: localStorage.sphincsPublicKey
 			}
-
-			localStorage.superSphincsPublicKey	= keyData.public.superSphincs;
-			localStorage.sphincsPublicKey		= keyData.public.sphincs;
-			localStorage.rsaPublicKey			= keyData.public.rsa;
-
-			localStorage.superSphincsPrivateKey	= keyData.private.superSphincs;
-			localStorage.sphincsPrivateKey		= keyData.private.sphincs;
-			localStorage.rsaPrivateKey			= keyData.private.rsa;
-
-
-			/* Reconstruct an exported key using either the superSphincs
-				value or any pair of valid sphincs and rsa values */
-
-			superSphincs.importKeys({
-				public: {
-					sphincs: localStorage.sphincsPublicKey,
-					rsa: localStorage.rsaPublicKey
-				}
-			}).then(keyPair => {
-				/* May now use keyPair.publicKey as in the above examples */
-				console.log('Import #1:');
-				console.log(keyPair);
-			});
-
-			superSphincs.importKeys(
-				{
-					private: {
-						superSphincs: localStorage.superSphincsPrivateKey
-					}
-				},
-				'secret passphrase'
-			).then(keyPair => {
-				/* May now use keyPair as in the above examples */
-				console.log('Import #2:');
-				console.log(keyPair);
-			});
-
-			superSphincs.keyPair().then(newKeyPair => superSphincs.exportKeys(
-				newKeyPair,
-				'hunter2'
-			)).then(newKeyData =>
-				newKeyData.private.rsa
-			).then(newRsaPrivateKey => superSphincs.importKeys(
-				{
-					private: {
-						sphincs: localStorage.sphincsPrivateKey,
-						rsa: newRsaPrivateKey
-					}
-				},
-				{
-					sphincs: 'secret passphrase',
-					rsa: 'hunter2'
-				}
-			)).then(keyPair => {
-				/* May now use keyPair as in the above examples */
-				console.log('Import #3:');
-				console.log(keyPair);
-			});
 		});
 
-	});
+		// May now use keyPair1.publicKey as in the above examples
+		console.log('Import #1:');
+		console.log(keyPair1);
+
+		const keyPair2 = await superSphincs.importKeys(
+			{
+				private: {
+					superSphincs: localStorage.superSphincsPrivateKey
+				}
+			},
+			'secret passphrase'
+		);
+
+		// May now use keyPair2 as in the above examples
+		console.log('Import #2:');
+		console.log(keyPair2);
+
+		// Constructing an entirely new SuperSPHINCS key pair from
+		// the original SPHINCS key pair and a new RSA key pair
+		const keyPair3 = await superSphincs.importKeys(
+			{
+				private: {
+					rsa: (
+						await superSphincs.exportKeys(
+							await superSphincs.keyPair(),
+							'hunter2'
+						)
+					).private.rsa,
+					sphincs: localStorage.sphincsPrivateKey
+				}
+			},
+			{
+				rsa: 'hunter2',
+				sphincs: 'secret passphrase'
+			}
+		);
+
+		// May now use keyPair3 as in the above examples
+		console.log('Import #3:');
+		console.log(keyPair3);
+	})();
