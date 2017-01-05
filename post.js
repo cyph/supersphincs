@@ -912,10 +912,11 @@ return superSphincs;
 
 
 if (isNode) {
-	module.exports		= superSphincs;
+	superSphincs.superSphincs	= superSphincs
+	module.exports				= superSphincs;
 }
 else {
-	self.superSphincs	= superSphincs;
+	self.superSphincs			= superSphincs;
 }
 
 

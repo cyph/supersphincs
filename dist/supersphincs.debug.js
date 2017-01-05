@@ -18379,7 +18379,14 @@ return sphincs;
 
 }());
 
-self.sphincs	= sphincs;
+
+if (typeof module !== 'undefined' && module.exports) {
+	sphincs.sphincs	= sphincs;
+	module.exports	= sphincs;
+}
+else {
+	self.sphincs	= sphincs;
+}
 
 //# sourceMappingURL=sphincs.debug.js.map;
 
@@ -19478,10 +19485,11 @@ return superSphincs;
 
 
 if (isNode) {
-	module.exports		= superSphincs;
+	superSphincs.superSphincs	= superSphincs
+	module.exports				= superSphincs;
 }
 else {
-	self.superSphincs	= superSphincs;
+	self.superSphincs			= superSphincs;
 }
 
 
