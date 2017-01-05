@@ -18414,163 +18414,7 @@ d=(q&65535)+(O&65535);b=(q>>>16)+(O>>>16)+(d>>>16);c=(n&65535)+(N&65535)+(b>>>16
 15]+a[E>>8&15]+a[E>>4&15]+a[E&15]+a[F>>28&15]+a[F>>24&15]+a[F>>20&15]+a[F>>16&15]+a[F>>12&15]+a[F>>8&15]+a[F>>4&15]+a[F&15]);return n};!K.JS_SHA512_TEST&&ka?(Z.sha512=Z,Z.sha384=oa,Z.sha512_256=pa,Z.sha512_224=qa,module.exports=Z):K&&(K.sha512=Z,K.sha384=oa,K.sha512_256=pa,K.sha512_224=qa)})(this);
 
 !function(e){function n(){}function t(e,n){return function(){e.apply(n,arguments)}}function o(e){if("object"!=typeof this)throw new TypeError("Promises must be constructed via new");if("function"!=typeof e)throw new TypeError("not a function");this._state=0,this._handled=!1,this._value=void 0,this._deferreds=[],s(e,this)}function i(e,n){for(;3===e._state;)e=e._value;return 0===e._state?void e._deferreds.push(n):(e._handled=!0,void o._immediateFn(function(){var t=1===e._state?n.onFulfilled:n.onRejected;if(null===t)return void(1===e._state?r:u)(n.promise,e._value);var o;try{o=t(e._value)}catch(i){return void u(n.promise,i)}r(n.promise,o)}))}function r(e,n){try{if(n===e)throw new TypeError("A promise cannot be resolved with itself.");if(n&&("object"==typeof n||"function"==typeof n)){var i=n.then;if(n instanceof o)return e._state=3,e._value=n,void f(e);if("function"==typeof i)return void s(t(i,n),e)}e._state=1,e._value=n,f(e)}catch(r){u(e,r)}}function u(e,n){e._state=2,e._value=n,f(e)}function f(e){2===e._state&&0===e._deferreds.length&&o._immediateFn(function(){e._handled||o._unhandledRejectionFn(e._value)});for(var n=0,t=e._deferreds.length;n<t;n++)i(e,e._deferreds[n]);e._deferreds=null}function c(e,n,t){this.onFulfilled="function"==typeof e?e:null,this.onRejected="function"==typeof n?n:null,this.promise=t}function s(e,n){var t=!1;try{e(function(e){t||(t=!0,r(n,e))},function(e){t||(t=!0,u(n,e))})}catch(o){if(t)return;t=!0,u(n,o)}}var a=setTimeout;o.prototype["catch"]=function(e){return this.then(null,e)},o.prototype.then=function(e,t){var o=new this.constructor(n);return i(this,new c(e,t,o)),o},o.all=function(e){var n=Array.prototype.slice.call(e);return new o(function(e,t){function o(r,u){try{if(u&&("object"==typeof u||"function"==typeof u)){var f=u.then;if("function"==typeof f)return void f.call(u,function(e){o(r,e)},t)}n[r]=u,0===--i&&e(n)}catch(c){t(c)}}if(0===n.length)return e([]);for(var i=n.length,r=0;r<n.length;r++)o(r,n[r])})},o.resolve=function(e){return e&&"object"==typeof e&&e.constructor===o?e:new o(function(n){n(e)})},o.reject=function(e){return new o(function(n,t){t(e)})},o.race=function(e){return new o(function(n,t){for(var o=0,i=e.length;o<i;o++)e[o].then(n,t)})},o._immediateFn="function"==typeof setImmediate&&function(e){setImmediate(e)}||function(e){a(e,0)},o._unhandledRejectionFn=function(e){"undefined"!=typeof console&&console&&console.warn("Possible Unhandled Promise Rejection:",e)},o._setImmediateFn=function(e){o._immediateFn=e},o._setUnhandledRejectionFn=function(e){o._unhandledRejectionFn=e},"undefined"!="undefined"&&module.exports?module.exports=o:e.Promise||(e.Promise=o)}(this);
-
-
-        function from_string(str) {
-                if (typeof TextEncoder === "function") {
-                        return new TextEncoder("utf-8").encode(str);
-                }
-                str = unescape(encodeURIComponent(str));
-                var bytes = new Uint8Array(str.length);
-                for (var i = 0; i < str.length; i++) {
-                        bytes[i] = str.charCodeAt(i);
-                }
-                return bytes;
-        }
-
-        function to_string(bytes) {
-                if (typeof TextDecoder === "function") {
-                        return new TextDecoder("utf-8", {fatal: true}).decode(bytes);
-                }
-
-                try {
-                        return decodeURIComponent(escape(String.fromCharCode.apply(null, bytes)));
-                }
-                catch (_) {
-                        throw new TypeError("The encoded data was not valid.");
-                }
-        }
-
-        function from_hex(str) {
-                if (!is_hex(str)) throw new TypeError("The provided string doesn't look like hex data");
-                var result = new Uint8Array(str.length / 2);
-                for (var i = 0; i < str.length; i += 2) {
-                        result[i >>> 1] = parseInt(str.substr(i, 2), 16);
-                }
-                return result;
-        }
-
-        function to_hex(bytes) {
-                var str = "", b, c, x;
-                for (var i = 0; i < bytes.length; i++) {
-                        c = bytes[i] & 0xf;
-                        b = bytes[i] >>> 4;
-                        x = (87 + c + (((c - 10) >> 8) & ~38)) << 8 |
-                            (87 + b + (((b - 10) >> 8) & ~38));
-                        str += String.fromCharCode(x & 0xff) + String.fromCharCode(x >>> 8);
-                }
-                return str;
-        }
-
-        function is_hex(str) {
-                return (typeof str === "string" && /^[0-9a-f]+$/i.test(str) && str.length % 2 === 0);
-        }
-
-        function from_base64(sBase64, nBlocksSize) {
-                function _b64ToUint6(nChr) {
-                        return nChr > 64 && nChr < 91 ?
-                                nChr - 65 : nChr > 96 && nChr < 123 ?
-                                nChr - 71 : nChr > 47 && nChr < 58 ?
-                                nChr + 4 : nChr === 43 ?
-                                62 : nChr === 47 ?
-                                63 :
-                                0;
-                }
-                var
-                        sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""),
-                        nInLen = sB64Enc.length,
-                        nOutLen = nBlocksSize ? Math.ceil((nInLen * 3 + 1 >> 2) / nBlocksSize) * nBlocksSize : nInLen * 3 + 1 >> 2,
-                        taBytes = new Uint8Array(nOutLen);
-                for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
-                        nMod4 = nInIdx & 3;
-                        nUint24 |= _b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
-                        if (nMod4 === 3 || nInLen - nInIdx === 1) {
-                                for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
-                                        taBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
-                                }
-                                nUint24 = 0;
-                        }
-                }
-                return taBytes;
-        }
-
-        function to_base64(aBytes, noNewLine) {
-                function _uint6ToB64(nUint6) {
-                        return nUint6 < 26 ?
-                                nUint6 + 65 : nUint6 < 52 ?
-                                nUint6 + 71 : nUint6 < 62 ?
-                                nUint6 - 4 : nUint6 === 62 ?
-                                43 : nUint6 === 63 ?
-                                47 :
-                                65;
-                }
-                if (typeof aBytes === "string") {
-                        throw new Exception("input has to be an array");
-                }
-                var nMod3 = 2,
-                        sB64Enc = "";
-                for (var nLen = aBytes.length, nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
-                        nMod3 = nIdx % 3;
-                        if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0 && !noNewLine) {
-                                sB64Enc += "\r\n";
-                        }
-                        nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
-                        if (nMod3 === 2 || aBytes.length - nIdx === 1) {
-                                sB64Enc += String.fromCharCode(_uint6ToB64(nUint24 >>> 18 & 63), _uint6ToB64(nUint24 >>> 12 & 63), _uint6ToB64(nUint24 >>> 6 & 63), _uint6ToB64(nUint24 & 63));
-                                nUint24 = 0;
-                        }
-                }
-                return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3) + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
-        }
-
-        function output_formats() {
-                return ["uint8array", "text", "hex", "base64"];
-        }
-
-        function _format_output(output, optionalOutputFormat) {
-                var selectedOutputFormat = optionalOutputFormat || output_format;
-                if (!_is_output_format(selectedOutputFormat)) throw new Error(selectedOutputFormat + " output format is not available");
-                if (output instanceof AllocatedBuf) {
-                        if (selectedOutputFormat === "uint8array") return output.to_Uint8Array();
-                        else if (selectedOutputFormat === "text") return libsodium.Pointer_stringify(output.address, output.length);
-                        else if (selectedOutputFormat === "hex") return to_hex(output.to_Uint8Array());
-                        else if (selectedOutputFormat === "base64") return to_base64(output.to_Uint8Array());
-                        else throw new Error("What is output format \"" + selectedOutputFormat + "\"?");
-                } else if (typeof output === "object") { //Composed output. Example : key pairs
-                        var props = Object.keys(output);
-                        var formattedOutput = {};
-                        for (var i = 0; i < props.length; i++) {
-                                formattedOutput[props[i]] = _format_output(output[props[i]], selectedOutputFormat);
-                        }
-                        return formattedOutput;
-                } else if (typeof output === "string") {
-                        return output;
-                } else {
-                        throw new TypeError("Cannot format output");
-                }
-        }
-
-        function _is_output_format(format) {
-                var formats = output_formats();
-                for (var i = 0; i < formats.length; i++) {
-                        if (formats[i] === format) return true;
-                }
-                return false;
-        }
-
-        function _check_output_format(format) {
-                if (!format) {
-                        return;
-                } else if (typeof format !== "string") {
-                        throw new TypeError("When defined, the output format must be a string");
-                } else if (!_is_output_format(format)) {
-                        throw new Error(format + " is not a supported output format");
-                }
-        }
-
-        //---------------------------------------------------------------------------
-        // 
-function memzero(bytes) { if (! bytes instanceof Uint8Array) { throw new TypeError("Only Uint8Array instances can be wiped"); } for (var i = 0 | 0, j = bytes.length; i < j; i++) { bytes[i] = 0; } }
+var sodiumUtil=function(){function from_string(str){if(typeof TextEncoder==="function"){return new TextEncoder("utf-8").encode(str)}str=unescape(encodeURIComponent(str));var bytes=new Uint8Array(str.length);for(var i=0;i<str.length;i++){bytes[i]=str.charCodeAt(i)}return bytes}function to_string(bytes){if(typeof TextDecoder==="function"){return new TextDecoder("utf-8",{fatal:true}).decode(bytes)}var toStringChunkSize=8192,numChunks=Math.ceil(bytes.length/toStringChunkSize);if(numChunks<=1){try{return decodeURIComponent(escape(String.fromCharCode.apply(null,bytes)))}catch(_){throw new TypeError("The encoded data was not valid.")}}var totalString="";var sequenceReadOffset=0;for(var i=0;i<numChunks;i++){var currentChunk=Array.prototype.slice.call(bytes,i*toStringChunkSize+sequenceReadOffset,(i+1)*toStringChunkSize+sequenceReadOffset);if(currentChunk.length==0){continue}var sequenceDetectionComplete,sequenceIndex=currentChunk.length,sequenceLength=0;do{sequenceIndex--;var currentByte=currentChunk[sequenceIndex];if(currentByte>=240){sequenceLength=4;sequenceDetectionComplete=true}else if(currentByte>=224){sequenceLength=3;sequenceDetectionComplete=true}else if(currentByte>=192){sequenceLength=2;sequenceDetectionComplete=true}else if(currentByte<128){sequenceLength=1;sequenceDetectionComplete=true}}while(!sequenceDetectionComplete);var extraBytes=sequenceLength-(currentChunk.length-sequenceIndex);for(var j=0;j<extraBytes;j++){sequenceReadOffset--;currentChunk.pop()}totalString+=to_string(currentChunk)}return totalString}function from_hex(str){if(!is_hex(str)){throw new TypeError("The provided string doesn't look like hex data")}var result=new Uint8Array(str.length/2);for(var i=0;i<str.length;i+=2){result[i>>>1]=parseInt(str.substr(i,2),16)}return result}function to_hex(bytes){var str="",b,c,x;for(var i=0;i<bytes.length;i++){c=bytes[i]&15;b=bytes[i]>>>4;x=87+c+(c-10>>8&~38)<<8|87+b+(b-10>>8&~38);str+=String.fromCharCode(x&255)+String.fromCharCode(x>>>8)}return str}function is_hex(str){return typeof str==="string"&&/^[0-9a-f]+$/i.test(str)&&str.length%2===0}function from_base64(sBase64,nBlocksSize){function _b64ToUint6(nChr){return nChr>64&&nChr<91?nChr-65:nChr>96&&nChr<123?nChr-71:nChr>47&&nChr<58?nChr+4:nChr===43?62:nChr===47?63:0}var sB64Enc=sBase64.replace(/[^A-Za-z0-9\+\/]/g,""),nInLen=sB64Enc.length,nOutLen=nBlocksSize?Math.ceil((nInLen*3+1>>2)/nBlocksSize)*nBlocksSize:nInLen*3+1>>2,taBytes=new Uint8Array(nOutLen);for(var nMod3,nMod4,nUint24=0,nOutIdx=0,nInIdx=0;nInIdx<nInLen;nInIdx++){nMod4=nInIdx&3;nUint24|=_b64ToUint6(sB64Enc.charCodeAt(nInIdx))<<18-6*nMod4;if(nMod4===3||nInLen-nInIdx===1){for(nMod3=0;nMod3<3&&nOutIdx<nOutLen;nMod3++,nOutIdx++){taBytes[nOutIdx]=nUint24>>>(16>>>nMod3&24)&255}nUint24=0}}return taBytes}function to_base64(aBytes,noNewLine){if(typeof noNewLine==="undefined"){noNewLine=true}function _uint6ToB64(nUint6){return nUint6<26?nUint6+65:nUint6<52?nUint6+71:nUint6<62?nUint6-4:nUint6===62?43:nUint6===63?47:65}if(typeof aBytes==="string"){throw new Error("input has to be an array")}var nMod3=2,sB64Enc="";for(var nLen=aBytes.length,nUint24=0,nIdx=0;nIdx<nLen;nIdx++){nMod3=nIdx%3;if(nIdx>0&&nIdx*4/3%76===0&&!noNewLine){sB64Enc+="\r\n"}nUint24|=aBytes[nIdx]<<(16>>>nMod3&24);if(nMod3===2||aBytes.length-nIdx===1){sB64Enc+=String.fromCharCode(_uint6ToB64(nUint24>>>18&63),_uint6ToB64(nUint24>>>12&63),_uint6ToB64(nUint24>>>6&63),_uint6ToB64(nUint24&63));nUint24=0}}return sB64Enc.substr(0,sB64Enc.length-2+nMod3)+(nMod3===2?"":nMod3===1?"=":"==")}function output_formats(){return["uint8array","text","hex","base64"]}function _format_output(output,optionalOutputFormat){var selectedOutputFormat=optionalOutputFormat||output_format;if(!_is_output_format(selectedOutputFormat)){throw new Error(selectedOutputFormat+" output format is not available")}if(output instanceof AllocatedBuf){if(selectedOutputFormat==="uint8array"){return output.to_Uint8Array()}else if(selectedOutputFormat==="text"){return to_string(output.to_Uint8Array())}else if(selectedOutputFormat==="hex"){return to_hex(output.to_Uint8Array())}else if(selectedOutputFormat==="base64"){return to_base64(output.to_Uint8Array())}else{throw new Error('What is output format "'+selectedOutputFormat+'"?')}}else if(typeof output==="object"){var props=Object.keys(output);var formattedOutput={};for(var i=0;i<props.length;i++){formattedOutput[props[i]]=_format_output(output[props[i]],selectedOutputFormat)}return formattedOutput}else if(typeof output==="string"){return output}else{throw new TypeError("Cannot format output")}}function _is_output_format(format){var formats=output_formats();for(var i=0;i<formats.length;i++){if(formats[i]===format){return true}}return false}function _check_output_format(format){if(!format){return}else if(typeof format!=="string"){throw new TypeError("When defined, the output format must be a string")}else if(!_is_output_format(format)){throw new Error(format+" is not a supported output format")}}function memcmp(b1,b2){if(!(b1 instanceof Uint8Array&&b2 instanceof Uint8Array)){throw new TypeError("Only Uint8Array instances can be compared")}if(b1.length!==b2.length){throw new TypeError("Only instances of identical length can be compared")}for(var d=0|0,i=0|0,j=b1.length;i<j;i++){d|=b1[i]^b2[i]}return d===0}function memzero(bytes){if(!bytes instanceof Uint8Array){throw new TypeError("Only Uint8Array instances can be wiped")}for(var i=0|0,j=bytes.length;i<j;i++){bytes[i]=0}}return{from_base64:from_base64,from_hex:from_hex,from_string:from_string,memcmp:memcmp,memzero:memzero,to_base64:to_base64,to_hex:to_hex,to_string:to_string}}();
 ;
 
 var rsaKeygen, pemJwk;
@@ -18583,7 +18427,11 @@ if (isNode) {
 
 function importJWK (key, purpose) {
 	return Promise.resolve().then(function () {
-		var jwk	= JSON.parse(to_string(new Uint8Array(new Uint8Array(key).buffer, 0, key.indexOf(0))));
+		var jwk	= JSON.parse(
+			sodiumUtil.to_string(
+				new Uint8Array(new Uint8Array(key).buffer, 0, key.indexOf(0))
+			)
+		);
 
 		if (isNode) {
 			return pemJwk.jwk2pem(jwk);
@@ -18613,13 +18461,13 @@ function exportJWK (key) {
 			);
 		}
 	}).then(function (jwk) {
-		return from_string(JSON.stringify(jwk));
+		return sodiumUtil.from_string(JSON.stringify(jwk));
 	});
 }
 
 function clearMemory (data) {
 	if (data instanceof Uint8Array) {
-		memzero(data);
+		sodiumUtil.memzero(data);
 	}
 	else if (isNode && data instanceof Buffer) {
 		data.fill(0);
@@ -18628,7 +18476,7 @@ function clearMemory (data) {
 
 function decodeBase64 (data) {
 	return typeof data === 'string' ?
-		from_base64(data) :
+		sodiumUtil.from_base64(data) :
 		data
 	;
 }
@@ -18636,13 +18484,13 @@ function decodeBase64 (data) {
 function encodeBase64 (data) {
 	return typeof data === 'string' ?
 		data :
-		to_base64(data).replace(/\s+/g, '')
+		sodiumUtil.to_base64(data).replace(/\s+/g, '')
 	;
 }
 
 function decodeString (message) {
 	return typeof message === 'string' ?
-		from_string(message) :
+		sodiumUtil.from_string(message) :
 		message
 	;
 }
@@ -18650,7 +18498,7 @@ function decodeString (message) {
 function encodeString (message) {
 	return typeof message === 'string' ?
 		message :
-		to_string(message)
+		sodiumUtil.to_string(message)
 	;
 }
 
@@ -19015,14 +18863,14 @@ var superSphincs	= {
 				return binary;
 			}
 
-			return {binary: binary, hex: to_hex(binary)};
+			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
 		}).catch(function () {
 			if (shouldClearMessageBinary) {
 				clearMemory(messageBinary);
 			}
 
 			var hex		= sha512(encodeString(message));
-			var binary	= from_hex(hex);
+			var binary	= sodiumUtil.from_hex(hex);
 
 			if (onlyBinary) {
 				return binary;

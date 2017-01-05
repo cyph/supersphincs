@@ -10,7 +10,11 @@ if (isNode) {
 
 function importJWK (key, purpose) {
 	return Promise.resolve().then(function () {
-		var jwk	= JSON.parse(to_string(new Uint8Array(new Uint8Array(key).buffer, 0, key.indexOf(0))));
+		var jwk	= JSON.parse(
+			sodiumUtil.to_string(
+				new Uint8Array(new Uint8Array(key).buffer, 0, key.indexOf(0))
+			)
+		);
 
 		if (isNode) {
 			return pemJwk.jwk2pem(jwk);
@@ -40,13 +44,13 @@ function exportJWK (key) {
 			);
 		}
 	}).then(function (jwk) {
-		return from_string(JSON.stringify(jwk));
+		return sodiumUtil.from_string(JSON.stringify(jwk));
 	});
 }
 
 function clearMemory (data) {
 	if (data instanceof Uint8Array) {
-		memzero(data);
+		sodiumUtil.memzero(data);
 	}
 	else if (isNode && data instanceof Buffer) {
 		data.fill(0);
@@ -55,7 +59,7 @@ function clearMemory (data) {
 
 function decodeBase64 (data) {
 	return typeof data === 'string' ?
-		from_base64(data) :
+		sodiumUtil.from_base64(data) :
 		data
 	;
 }
@@ -63,13 +67,13 @@ function decodeBase64 (data) {
 function encodeBase64 (data) {
 	return typeof data === 'string' ?
 		data :
-		to_base64(data).replace(/\s+/g, '')
+		sodiumUtil.to_base64(data).replace(/\s+/g, '')
 	;
 }
 
 function decodeString (message) {
 	return typeof message === 'string' ?
-		from_string(message) :
+		sodiumUtil.from_string(message) :
 		message
 	;
 }
@@ -77,7 +81,7 @@ function decodeString (message) {
 function encodeString (message) {
 	return typeof message === 'string' ?
 		message :
-		to_string(message)
+		sodiumUtil.to_string(message)
 	;
 }
 
@@ -442,14 +446,14 @@ var superSphincs	= {
 				return binary;
 			}
 
-			return {binary: binary, hex: to_hex(binary)};
+			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
 		}).catch(function () {
 			if (shouldClearMessageBinary) {
 				clearMemory(messageBinary);
 			}
 
 			var hex		= sha512(encodeString(message));
-			var binary	= from_hex(hex);
+			var binary	= sodiumUtil.from_hex(hex);
 
 			if (onlyBinary) {
 				return binary;
