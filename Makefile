@@ -46,6 +46,8 @@ all:
 		}; \
 	"
 
+	sed -i 's|require(|eval("require")(|g' dist/supersphincs.js
+
 	rm -rf sphincs.js sodiumhelpers js-sha512 promise-polyfill
 
 clean:
