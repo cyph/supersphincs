@@ -915,7 +915,7 @@ return superSphincs;
 }());
 
 
-if (isNode) {
+if (typeof module !== 'undefined' && module.exports) {
 	superSphincs.superSphincs	= superSphincs
 	module.exports				= superSphincs;
 }
