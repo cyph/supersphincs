@@ -1,6 +1,6 @@
 {
 	"name": "supersphincs",
-	"version": "1.3.1",
+	"version": "1.4.0",
 	"description": "SPHINCS and RSASSA-PKCS1-v1_5 paired together as a single signing scheme",
 	"main": "dist/supersphincs.js",
 	"types": "./supersphincs.d.ts",
