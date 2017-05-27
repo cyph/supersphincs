@@ -4,9 +4,9 @@ all:
 
 	npm install
 
-	cp supersphincs.js dist/
-	webpack --output-library-target var --output-library superSphincs supersphincs.js dist/supersphincs.global.js
-	uglifyjs dist/supersphincs.global.js -o dist/supersphincs.global.js
+	cp supersphincs.js dist/supersphincs.module.js
+	webpack --output-library-target var --output-library superSphincs supersphincs.js dist/supersphincs.js
+	uglifyjs dist/supersphincs.js -o dist/supersphincs.js
 
 	rm -rf node_modules
 

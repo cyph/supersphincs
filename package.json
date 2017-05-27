@@ -2,7 +2,7 @@
 	"name": "supersphincs",
 	"version": "2.0.0",
 	"description": "SPHINCS and RSASSA-PKCS1-v1_5 paired together as a single signing scheme",
-	"main": "dist/supersphincs.js",
+	"main": "dist/supersphincs.module.js",
 	"types": "./supersphincs.d.ts",
 	"repository": {
 		"type": "git",
