@@ -11,11 +11,7 @@ hashing is first performed in JavaScript using a remarkably efficient [pure JS i
 of SHA-512](https://github.com/emn178/js-sha512) which seems to consistently outperform
 native SubtleCrypto SHA-512 across devices in both Chrome and Firefox.
 
-RSA signing is performed by the current platform's native implementation (SubtleCrypto API
-in the browser, or Crypto API in Node.js). In clients without a native implementation,
-generating keys and signing messages will fail. However, verifying signatures will continue
-to work; in such cases, the client will simply ignore the RSA signature and verify only the
-SPHINCS signature.
+RSA signing is performed using [rsasign.js](https://github.com/cyph/rsasign.js).
 
 ## Example Usage
 
