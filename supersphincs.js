@@ -1,6 +1,3 @@
-(function () {
-
-
 var isNode	=
 	typeof process === 'object' &&
 	typeof require === 'function' &&
@@ -15,12 +12,8 @@ var sodiumUtil	= require('sodiumutil');
 var sphincs		= require('sphincs');
 
 
-var superSphincs = (function () {
-
 var nodeCrypto;
 if (isNode) {
-	self		= this;
-
 	nodeCrypto	= eval('require')('crypto');
 }
 
@@ -745,18 +738,5 @@ var superSphincs	= {
 
 
 
-return superSphincs;
-
-}());
-
-
-if (typeof module !== 'undefined' && module.exports) {
-	superSphincs.superSphincs	= superSphincs
-	module.exports				= superSphincs;
-}
-else {
-	self.superSphincs			= superSphincs;
-}
-
-
-}());
+superSphincs.superSphincs	= superSphincs;
+module.exports				= superSphincs;
