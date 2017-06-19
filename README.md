@@ -20,15 +20,17 @@ RSA signing is performed using [rsasign.js](https://github.com/cyph/rsasign.js).
 			await superSphincs.keyPair()
 		;
 
-		const message /*: string */ = 'hello';
+		const message /*: Uint8Array */ =
+			new Uint8Array([104, 101, 108, 108, 111, 0]) // "hello"
+		;
 
 		/* Combined signatures */
 
-		const signed /*: string */ =
+		const signed /*: Uint8Array */ =
 			await superSphincs.sign(message, keyPair.privateKey)
 		;
 
-		const verified /*: string */ =
+		const verified /*: Uint8Array */ =
 			await superSphincs.open(signed, keyPair.publicKey) // same as message
 		;
 
@@ -60,12 +62,12 @@ RSA signing is performed using [rsasign.js](https://github.com/cyph/rsasign.js).
 		;
 
 		// May now save exported keys to disk (or whatever)
-		localStorage.superSphincsPrivateKey	= keyData.private.superSphincs;
-		localStorage.sphincsPrivateKey		= keyData.private.sphincs;
-		localStorage.rsaPrivateKey			= keyData.private.rsa;
-		localStorage.superSphincsPublicKey	= keyData.public.superSphincs;
-		localStorage.sphincsPublicKey		= keyData.public.sphincs;
-		localStorage.rsaPublicKey			= keyData.public.rsa;
+		localStorage.superSphincsPrivateKey = keyData.private.superSphincs;
+		localStorage.sphincsPrivateKey      = keyData.private.sphincs;
+		localStorage.rsaPrivateKey          = keyData.private.rsa;
+		localStorage.superSphincsPublicKey  = keyData.public.superSphincs;
+		localStorage.sphincsPublicKey       = keyData.public.sphincs;
+		localStorage.rsaPublicKey           = keyData.public.rsa;
 
 
 		/* Reconstruct an exported key using either the superSphincs
