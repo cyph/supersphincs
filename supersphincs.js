@@ -146,11 +146,11 @@ function encrypt (plaintext, password) {
 
 function decrypt (cyphertext, password) {
 	return Promise.resolve().then(function () {
-		var iv		= new Uint8Array(cyphertext.buffer, 0, aes.ivBytes);
+		var iv		= new Uint8Array(cyphertext.buffer, cyphertext.byteOffset, aes.ivBytes);
 
 		var salt	= new Uint8Array(
 			cyphertext.buffer,
-			aes.ivBytes,
+			cyphertext.byteOffset + aes.ivBytes,
 			aes.keyDerivation.saltBytes
 		);
 
@@ -164,7 +164,7 @@ function decrypt (cyphertext, password) {
 		if (isNode) {
 			var encrypted	= new Uint8Array(
 				cyphertext.buffer,
-				aes.ivBytes + aes.keyDerivation.saltBytes,
+				cyphertext.byteOffset + aes.ivBytes + aes.keyDerivation.saltBytes,
 				cyphertext.length -
 					aes.ivBytes -
 					aes.keyDerivation.saltBytes -
@@ -173,7 +173,7 @@ function decrypt (cyphertext, password) {
 
 			var authTag		= new Uint8Array(
 				cyphertext.buffer,
-				cyphertext.length - aes.tagBytes
+				cyphertext.byteOffset + cyphertext.length - aes.tagBytes
 			);
 
 			var decipher	= nodeCrypto.createDecipheriv(
@@ -195,7 +195,7 @@ function decrypt (cyphertext, password) {
 		else {
 			var encrypted	= new Uint8Array(
 				cyphertext.buffer,
-				aes.ivBytes + aes.keyDerivation.saltBytes
+				cyphertext.byteOffset + aes.ivBytes + aes.keyDerivation.saltBytes
 			);
 
 			decrypted	= crypto.subtle.decrypt(
@@ -358,7 +358,7 @@ var superSphincs	= {
 		return superSphincs.hash(message).then(function (hash) {
 			return Promise.all([hash, rsaSign.signDetached(
 				hash.binary,
-				new Uint8Array(privateKey.buffer, 0, rsaSign.privateKeyBytes)
+				new Uint8Array(privateKey.buffer, privateKey.byteOffset, rsaSign.privateKeyBytes)
 			)]);
 		}).then(function (results) {
 			var hash			= results[0];
@@ -366,7 +366,7 @@ var superSphincs	= {
 
 			var sphincsSignature	= sphincs.signDetached(
 				hash.binary,
-				new Uint8Array(privateKey.buffer, rsaSign.privateKeyBytes)
+				new Uint8Array(privateKey.buffer, privateKey.byteOffset + rsaSign.privateKeyBytes)
 			);
 
 			var signature	= new Uint8Array(superSphincs.bytes);
@@ -398,11 +398,14 @@ var superSphincs	= {
 
 			var signature	= new Uint8Array(
 				signed.buffer,
-				0,
+				signed.byteOffset,
 				superSphincs.bytes
 			);
 
-			var message		= new Uint8Array(signed.buffer, superSphincs.bytes);
+			var message		= new Uint8Array(
+				signed.buffer,
+				signed.byteOffset + superSphincs.bytes
+			);
 
 			return Promise.all([message, superSphincs.verifyDetached(
 				signature,
@@ -449,9 +452,9 @@ var superSphincs	= {
 			return Promise.all([
 				hash,
 				rsaSign.verifyDetached(
-					new Uint8Array(signature.buffer, 0, rsaSign.bytes),
+					new Uint8Array(signature.buffer, signature.byteOffset, rsaSign.bytes),
 					hash.binary,
-					new Uint8Array(publicKey.buffer, 0, rsaSign.publicKeyBytes)
+					new Uint8Array(publicKey.buffer, publicKey.byteOffset, rsaSign.publicKeyBytes)
 				)
 			]);
 		}).then(function (results) {
@@ -461,11 +464,11 @@ var superSphincs	= {
 			var sphincsIsValid	= sphincs.verifyDetached(
 				new Uint8Array(
 					signature.buffer,
-					rsaSign.bytes,
+					signature.byteOffset + rsaSign.bytes,
 					sphincs.bytes
 				),
 				hash.binary,
-				new Uint8Array(publicKey.buffer, rsaSign.publicKeyBytes)
+				new Uint8Array(publicKey.buffer, publicKey.byteOffset + rsaSign.publicKeyBytes)
 			);
 
 			if (shouldClearSignature) {
@@ -507,13 +510,13 @@ var superSphincs	= {
 
 			rsaPrivateKey.set(new Uint8Array(
 				keyPair.publicKey.buffer,
-				0,
+				keyPair.publicKey.byteOffset,
 				rsaSign.publicKeyBytes
 			));
 			rsaPrivateKey.set(
 				new Uint8Array(
 					keyPair.privateKey.buffer,
-					0,
+					keyPair.privateKey.byteOffset,
 					rsaSign.privateKeyBytes
 				),
 				rsaSign.publicKeyBytes
@@ -521,12 +524,12 @@ var superSphincs	= {
 
 			sphincsPrivateKey.set(new Uint8Array(
 				keyPair.publicKey.buffer,
-				rsaSign.publicKeyBytes
+				keyPair.publicKey.byteOffset + rsaSign.publicKeyBytes
 			));
 			sphincsPrivateKey.set(
 				new Uint8Array(
 					keyPair.privateKey.buffer,
-					rsaSign.privateKeyBytes
+					keyPair.privateKey.byteOffset + rsaSign.privateKeyBytes
 				),
 				sphincs.publicKeyBytes
 			);
@@ -584,12 +587,12 @@ var superSphincs	= {
 				public: {
 					rsa: sodiumUtil.to_base64(new Uint8Array(
 						keyPair.publicKey.buffer,
-						0,
+						keyPair.publicKey.byteOffset,
 						rsaSign.publicKeyBytes
 					)),
 					sphincs: sodiumUtil.to_base64(new Uint8Array(
 						keyPair.publicKey.buffer,
-						rsaSign.publicKeyBytes
+						keyPair.publicKey.byteOffset + rsaSign.publicKeyBytes
 					)),
 					superSphincs: sodiumUtil.to_base64(keyPair.publicKey)
 				}
@@ -650,13 +653,13 @@ var superSphincs	= {
 
 				keyPair.publicKey.set(new Uint8Array(
 					superSphincsPrivateKey.buffer,
-					0,
+					superSphincsPrivateKey.byteOffset,
 					superSphincs.publicKeyBytes
 				));
 
 				keyPair.privateKey.set(new Uint8Array(
 					superSphincsPrivateKey.buffer,
-					superSphincs.publicKeyBytes
+					superSphincsPrivateKey.byteOffset + superSphincs.publicKeyBytes
 				));
 			}
 			else {
@@ -666,14 +669,14 @@ var superSphincs	= {
 				keyPair.publicKey.set(
 					new Uint8Array(
 						rsaPrivateKey.buffer,
-						0,
+						rsaPrivateKey.byteOffset,
 						rsaSign.publicKeyBytes
 					)
 				);
 				keyPair.publicKey.set(
 					new Uint8Array(
 						sphincsPrivateKey.buffer,
-						0,
+						sphincsPrivateKey.byteOffset,
 						sphincs.publicKeyBytes
 					),
 					rsaSign.publicKeyBytes
@@ -682,13 +685,13 @@ var superSphincs	= {
 				keyPair.privateKey.set(
 					new Uint8Array(
 						rsaPrivateKey.buffer,
-						rsaSign.publicKeyBytes
+						rsaPrivateKey.byteOffset + rsaSign.publicKeyBytes
 					)
 				);
 				keyPair.privateKey.set(
 					new Uint8Array(
 						sphincsPrivateKey.buffer,
-						sphincs.publicKeyBytes
+						sphincsPrivateKey.byteOffset + sphincs.publicKeyBytes
 					),
 					rsaSign.privateKeyBytes
 				);
