@@ -1,16 +1,16 @@
 declare module 'supersphincs' {
 	interface ISuperSphincs {
 		/** Signature length. */
-		bytes: number;
+		bytes: Promise<number>;
 
 		/** Hash length. */
-		hashBytes: number;
+		hashBytes: Promise<number>;
 
 		/** Private key length. */
-		privateKeyBytes: number;
+		privateKeyBytes: Promise<number>;
 
 		/** Public key length. */
-		publicKeyBytes: number;
+		publicKeyBytes: Promise<number>;
 
 		/** Serializes key pair with optional encryption. */
 		exportKeys (keyPair: {publicKey: Uint8Array}) : Promise<{
@@ -47,10 +47,13 @@ declare module 'supersphincs' {
 		}>;
 
 		/** SHA-512 hash. */
-		hash (message: Uint8Array|string, onlyBinary: true) : Uint8Array;
+		hash (message: Uint8Array|string, onlyBinary: true) : Promise<Uint8Array>;
 
 		/** SHA-512 hash. */
-		hash (message: Uint8Array|string, onlyBinary?: false) : {binary: Uint8Array; hex: string};
+		hash (message: Uint8Array|string, onlyBinary?: false) : Promise<{
+			binary: Uint8Array;
+			hex: string;
+		}>;
 
 		/** Imports exported keys and creates key pair object. */
 		importKeys (keyData: {public: {superSphincs: string}}) : Promise<{
