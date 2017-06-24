@@ -12,9 +12,10 @@ var sodiumUtil	= require('sodiumutil');
 var sphincs		= require('sphincs');
 
 
-var nodeCrypto;
+var nodeCrypto, Buffer;
 if (isNode) {
 	nodeCrypto	= eval('require')('crypto');
+	Buffer		= eval('global.Buffer');
 }
 
 
@@ -22,8 +23,8 @@ function deriveEncryptionKey (password, salt) {
 	if (isNode) {
 		return new Promise(function (resolve, reject) {
 			nodeCrypto.pbkdf2(
-				new Buffer(password),
-				new Buffer(salt),
+				Buffer.from(password),
+				Buffer.from(salt),
 				aes.keyDerivation.iterations,
 				aes.keyBytes,
 				aes.keyDerivation.hashFunction,
@@ -95,7 +96,7 @@ function encrypt (plaintext, password) {
 	if (isNode) {
 		return setup.then(function (o) {
 			var cipher	= nodeCrypto.createCipheriv(aes.algorithm, o.key, o.iv);
-			var buf1	= cipher.update(new Buffer(plaintext));
+			var buf1	= cipher.update(Buffer.from(plaintext));
 			var buf2	= cipher.final();
 			var buf3	= cipher.getAuthTag();
 
@@ -178,16 +179,16 @@ function decrypt (cyphertext, password) {
 
 			var decipher	= nodeCrypto.createDecipheriv(
 				aes.algorithm,
-				new Buffer(key),
-				new Buffer(iv)
+				Buffer.from(key),
+				Buffer.from(iv)
 			);
 
-			decipher.setAuthTag(new Buffer(authTag));
+			decipher.setAuthTag(Buffer.from(authTag));
 
-			var buf1	= decipher.update(new Buffer(encrypted));
+			var buf1	= decipher.update(Buffer.from(encrypted));
 			var buf2	= decipher.final();
 
-			decrypted	= Buffer.concat([buf1, buf2]);;
+			decrypted	= Buffer.concat([buf1, buf2]);
 
 			sodiumUtil.memzero(buf1);
 			sodiumUtil.memzero(buf2);
@@ -272,7 +273,7 @@ var superSphincs	= {
 
 			if (isNode) {
 				var hasher	= nodeCrypto.createHash('sha512');
-				hasher.update(new Buffer(messageBinary));
+				hasher.update(Buffer.from(messageBinary));
 
 				return hasher.digest();
 			}
@@ -513,8 +514,8 @@ var superSphincs	= {
 		});;
 	}); },
 
-	exportKeys: function (keyPair, password) { return initiated.then(function () {
-		return Promise.resolve().then(function () {
+	exportKeys: function (keyPair, password) {
+		return initiated.then(function () {
 			if (!keyPair.privateKey) {
 				return null;
 			}
@@ -624,10 +625,10 @@ var superSphincs	= {
 				}
 			};
 		});
-	}); },
+	},
 
-	importKeys: function (keyData, password) { return initiated.then(function () {
-		return Promise.resolve().then(function () {
+	importKeys: function (keyData, password) {
+		return initiated.then(function () {
 			if (!keyData.private) {
 				return null;
 			}
@@ -740,7 +741,7 @@ var superSphincs	= {
 
 			return keyPair;
 		});
-	}); }
+	}
 };
 
 

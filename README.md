@@ -61,6 +61,10 @@ RSA signing is performed using [rsasign.js](https://github.com/cyph/rsasign.js).
 			await superSphincs.exportKeys(keyPair, 'secret passphrase')
 		;
 
+		if (typeof localStorage === 'undefined') {
+			localStorage	= {};
+		}
+
 		// May now save exported keys to disk (or whatever)
 		localStorage.superSphincsPrivateKey = keyData.private.superSphincs;
 		localStorage.sphincsPrivateKey      = keyData.private.sphincs;
