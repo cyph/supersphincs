@@ -2,16 +2,13 @@
 
 ## Overview
 
-A wrapper around [sphincs.js](https://github.com/cyph/sphincs.js) that pairs
-[SPHINCS](https://sphincs.cr.yp.to) with the more conventional (non-post-quantum)
-[RSASSA-PKCS1-v1_5](https://tools.ietf.org/html/rfc3447#section-8.2) signing scheme.
+SuperSPHINCS combines the post-quantum [SPHINCS](https://sphincs.cr.yp.to) with the more conventional [RSASSA-PKCS1-v1_5](https://tools.ietf.org/html/rfc3447#section-8.2) as a single signing scheme.
+SPHINCS is provided by [sphincs.js](https://github.com/cyph/sphincs.js) and RSA signing is performed
+using [rsasign.js](https://github.com/cyph/rsasign.js).
 
-To work around extremely poor performance of BLAKE-512 in the emitted SPHINCS asm.js code,
-hashing is first performed in JavaScript using a remarkably efficient [pure JS implementation
-of SHA-512](https://github.com/emn178/js-sha512) which seems to consistently outperform
-native SubtleCrypto SHA-512 across devices in both Chrome and Firefox.
-
-RSA signing is performed using [rsasign.js](https://github.com/cyph/rsasign.js).
+Before signing, a SHA-512 hash is performed, using the current platform's native implementation
+where available or [an efficient JavaScript implementation](https://github.com/emn178/js-sha512)
+otherwise.
 
 ## Example Usage
 
