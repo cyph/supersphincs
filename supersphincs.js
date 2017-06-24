@@ -440,7 +440,7 @@ var superSphincs	= {
 				publicKey
 			)]);
 		}).then(function (results) {
-			var message	= results[0];
+			var message	= new Uint8Array(results[0]);
 			var isValid	= results[1];
 
 			if (shouldClearSigned) {
