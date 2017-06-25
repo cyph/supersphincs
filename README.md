@@ -122,3 +122,20 @@ otherwise.
 		console.log('Import #3:');
 		console.log(keyPair3);
 	})();
+
+## Changelog
+
+Breaking changes in major versions:
+
+4.0.0:
+
+* As part of upgrading from asm.js to WebAssembly (with asm.js included as a fallback),
+the API is fully asynchronous.
+
+3.0.0:
+
+* General API cleanup.
+
+2.0.0:
+
+* Split into module (supersphincs.js) and standalone pre-bundled version (dist/supersphincs.js).
