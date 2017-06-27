@@ -1,5 +1,5 @@
 all:
-	rm -rf dist node_modules 2> /dev/null
+	rm -rf dist node_modules package-lock.json 2> /dev/null
 	mkdir dist node_modules
 
 	npm install
@@ -15,7 +15,7 @@ all:
 	" >> dist/supersphincs.js
 	uglifyjs dist/supersphincs.js -cmo dist/supersphincs.js
 
-	rm -rf node_modules
+	rm -rf node_modules package-lock.json
 
 clean:
-	rm -rf dist node_modules
+	rm -rf dist node_modules package-lock.json
