@@ -12,7 +12,7 @@ declare module 'supersphincs' {
 		/** Public key length. */
 		publicKeyBytes: Promise<number>;
 
-		/** Serializes key pair with optional encryption. */
+		/** Serializes key pair. */
 		exportKeys (keyPair: {publicKey: Uint8Array}) : Promise<{
 			private: {
 				rsa: null;
@@ -26,7 +26,10 @@ declare module 'supersphincs' {
 			};
 		}>;
 
-		/** Serializes key pair with optional encryption. */
+		/**
+		 * Serializes key pair with optional encryption.
+		 * Using encryption (a password) requires native crypto support.
+		 */
 		exportKeys (
 			keyPair: {
 				privateKey: Uint8Array;
@@ -67,7 +70,10 @@ declare module 'supersphincs' {
 			publicKey: Uint8Array;
 		}>;
 
-		/** Imports exported keys and creates key pair object. */
+		/**
+		 * Imports exported keys and creates key pair object.
+		 * Using a password requires native crypto support.
+		 */
 		importKeys (
 			keyData: {
 				private: {
@@ -81,7 +87,10 @@ declare module 'supersphincs' {
 			publicKey: Uint8Array;
 		}>;
 
-		/** Imports exported keys and creates key pair object. */
+		/**
+		 * Imports exported keys and creates key pair object.
+		 * Using a password requires native crypto support.
+		 */
 		importKeys (
 			keyData: {
 				private: {
