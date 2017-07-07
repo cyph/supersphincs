@@ -6,7 +6,7 @@ var isNode	=
 ;
 
 
-var sha512		= require('js-sha512');
+var sha512		= require('./nacl-sha512');
 var rsaSign		= require('rsasign');
 var sodiumUtil	= require('sodiumutil');
 var sphincs		= require('sphincs');
@@ -302,14 +302,13 @@ var superSphincs	= {
 				sodiumUtil.memzero(messageBinary);
 			}
 
-			var hex		= sha512(sodiumUtil.to_string(message));
-			var binary	= sodiumUtil.from_hex(hex);
+			var binary	= sha512(message);
 
 			if (onlyBinary) {
 				return binary;
 			}
 
-			return {binary: binary, hex: hex};
+			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
 		});
 	}); },
 

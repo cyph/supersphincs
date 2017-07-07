@@ -7,8 +7,8 @@ SPHINCS is provided by [sphincs.js](https://github.com/cyph/sphincs.js) and RSA 
 using [rsasign.js](https://github.com/cyph/rsasign.js).
 
 Before signing, a SHA-512 hash is performed, using the current platform's native implementation
-where available or [an efficient JavaScript implementation](https://github.com/emn178/js-sha512)
-otherwise.
+where available or an efficient JavaScript implementation from
+[TweetNaCl.js](https://github.com/dchest/tweetnacl-js) otherwise.
 
 ## Example Usage
 
