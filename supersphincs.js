@@ -265,15 +265,14 @@ var superSphincs	= {
 	hashBytes: Promise.resolve(64),
 
 	hash: function (message, onlyBinary) { return initiated.then(function () {
-		var messageBinary;
-		var shouldClearMessageBinary	= typeof message === 'string';
+		var shouldClearMessage	= typeof message === 'string';
 
 		return Promise.resolve().then(function () {
-			messageBinary	= sodiumUtil.from_string(message);
+			message	= sodiumUtil.from_string(message);
 
 			if (isNode) {
 				var hasher	= nodeCrypto.createHash('sha512');
-				hasher.update(Buffer.from(messageBinary));
+				hasher.update(Buffer.from(message));
 
 				return hasher.digest();
 			}
@@ -282,12 +281,12 @@ var superSphincs	= {
 					{
 						name: 'SHA-512'
 					},
-					messageBinary
+					message
 				);
 			}
 		}).then(function (hash) {
-			if (shouldClearMessageBinary) {
-				sodiumUtil.memzero(messageBinary);
+			if (shouldClearMessage) {
+				sodiumUtil.memzero(message);
 			}
 
 			var binary	= new Uint8Array(hash);
@@ -298,8 +297,8 @@ var superSphincs	= {
 
 			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
 		}).catch(function () {
-			if (shouldClearMessageBinary) {
-				sodiumUtil.memzero(messageBinary);
+			if (shouldClearMessage) {
+				sodiumUtil.memzero(message);
 			}
 
 			var binary	= sha512(message);
