@@ -264,7 +264,7 @@ var superSphincs	= {
 	bytes: initiated.then(function () { return bytes; }),
 	hashBytes: Promise.resolve(64),
 
-	hash: function (message, onlyBinary) { return initiated.then(function () {
+	hash: function (message, onlyBinary, additionalData) { return initiated.then(function () {
 		var shouldClearMessage	= typeof message === 'string';
 
 		return Promise.resolve().then(function () {
@@ -291,7 +291,7 @@ var superSphincs	= {
 
 			var binary	= new Uint8Array(hash);
 
-			if (onlyBinary) {
+			if (onlyBinary || additionalData !== undefined) {
 				return binary;
 			}
 
@@ -303,11 +303,30 @@ var superSphincs	= {
 
 			var binary	= sha512(message);
 
-			if (onlyBinary) {
+			if (onlyBinary || additionalData !== undefined) {
 				return binary;
 			}
 
 			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
+		}).then(function (hash) {
+			if (additionalData === undefined) {
+				return hash;
+			}
+
+			var shouldClearAdditionalData	= typeof additionalData === 'string';
+			additionalData					= sodiumUtil.from_string(additionalData);
+
+			var additionalDataMessage	= new Uint8Array(
+				additionalData.length + hash.length
+			);
+			additionalDataMessage.set(additionalData);
+			additionalDataMessage.set(hash, additionalData.length);
+
+			if (shouldClearAdditionalData) {
+				sodiumUtil.memzero(additionalData);
+			}
+
+			return superSphincs.hash(additionalDataMessage, onlyBinary);
 		});
 	}); },
 
@@ -339,10 +358,14 @@ var superSphincs	= {
 		});
 	}); },
 
-	sign: function (message, privateKey) { return initiated.then(function () {
+	sign: function (message, privateKey, additionalData) { return initiated.then(function () {
 		var shouldClearMessage	= typeof message === 'string';
 
-		return superSphincs.signDetached(message, privateKey).then(function (signature) {
+		return superSphincs.signDetached(
+			message,
+			privateKey,
+			additionalData
+		).then(function (signature) {
 			message		= sodiumUtil.from_string(message);
 
 			var signed	= new Uint8Array(
@@ -368,25 +391,36 @@ var superSphincs	= {
 		});
 	}); },
 
-	signBase64: function (message, privateKey) { return initiated.then(function () {
-		return superSphincs.sign(message, privateKey).then(function (signed) {
+	signBase64: function (message, privateKey, additionalData) { return initiated.then(function () {
+		return superSphincs.sign(message, privateKey, additionalData).then(function (signed) {
 			var s	= sodiumUtil.to_base64(signed);
 			sodiumUtil.memzero(signed);
 			return s;
 		});
 	}); },
 
-	signDetached: function (message, privateKey) { return initiated.then(function () {
-		return superSphincs.hash(message).then(function (hash) {
+	signDetached: function (
+		message,
+		privateKey,
+		additionalData
+	) { return initiated.then(function () {
+		return superSphincs.hash(message, undefined, additionalData).then(function (hash) {
 			return Promise.all([
 				hash,
 				rsaSign.signDetached(
 					hash.binary,
-					new Uint8Array(privateKey.buffer, privateKey.byteOffset, rsaSign.privateKeyBytes)
+					new Uint8Array(
+						privateKey.buffer,
+						privateKey.byteOffset,
+						rsaSign.privateKeyBytes
+					)
 				),
 				sphincs.signDetached(
 					hash.binary,
-					new Uint8Array(privateKey.buffer, privateKey.byteOffset + rsaSign.privateKeyBytes)
+					new Uint8Array(
+						privateKey.buffer,
+						privateKey.byteOffset + rsaSign.privateKeyBytes
+					)
 				)
 			]);
 		}).then(function (results) {
@@ -407,15 +441,24 @@ var superSphincs	= {
 		});
 	}); },
 
-	signDetachedBase64: function (message, privateKey) { return initiated.then(function () {
-		return superSphincs.signDetached(message, privateKey).then(function (signature) {
-			var s	= sodiumUtil.to_base64(signature);
-			sodiumUtil.memzero(signature);
-			return s;
+	signDetachedBase64: function (
+		message,
+		privateKey,
+		additionalData
+	) { return initiated.then(function () {
+			return superSphincs.signDetached(
+				message,
+				privateKey,
+				additionalData
+			).then(function (signature) {
+				var s	= sodiumUtil.to_base64(signature);
+				sodiumUtil.memzero(signature);
+				return s;
+			});
 		});
-	}); },
+	},
 
-	open: function (signed, publicKey) { return initiated.then(function () {
+	open: function (signed, publicKey, additionalData) { return initiated.then(function () {
 		var shouldClearSigned	= typeof signed === 'string';
 
 		return Promise.resolve().then(function () {
@@ -435,7 +478,8 @@ var superSphincs	= {
 			return Promise.all([message, superSphincs.verifyDetached(
 				signature,
 				message,
-				publicKey
+				publicKey,
+				additionalData
 			)]);
 		}).then(function (results) {
 			var message	= new Uint8Array(results[0]);
@@ -460,18 +504,23 @@ var superSphincs	= {
 		});
 	}); },
 
-	openString: function (signed, publicKey) { return initiated.then(function () {
-		return superSphincs.open(signed, publicKey).then(function (message) {
+	openString: function (signed, publicKey, additionalData) { return initiated.then(function () {
+		return superSphincs.open(signed, publicKey, additionalData).then(function (message) {
 			var s	= sodiumUtil.to_string(message);
 			sodiumUtil.memzero(message);
 			return s;
 		});
 	}); },
 
-	verifyDetached: function (signature, message, publicKey) { return initiated.then(function () {
+	verifyDetached: function (
+		signature,
+		message,
+		publicKey,
+		additionalData
+	) { return initiated.then(function () {
 		var shouldClearSignature	= typeof signature === 'string';
 
-		return superSphincs.hash(message).then(function (hash) {
+		return superSphincs.hash(message, undefined, additionalData).then(function (hash) {
 			signature	= sodiumUtil.from_base64(signature);
 
 			return Promise.all([

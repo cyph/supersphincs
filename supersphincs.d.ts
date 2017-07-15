@@ -112,28 +112,53 @@ declare module 'supersphincs' {
 		keyPair () : Promise<{privateKey: Uint8Array; publicKey: Uint8Array}>;
 
 		/** Verifies signed message against publicKey and returns it. */
-		open (signed: Uint8Array|string, publicKey: Uint8Array) : Promise<Uint8Array>;
+		open (
+			signed: Uint8Array|string,
+			publicKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<Uint8Array>;
 
 		/** Verifies signed message against publicKey and returns it decoded to a string. */
-		openString (signed: Uint8Array|string, publicKey: Uint8Array) : Promise<string>;
+		openString (
+			signed: Uint8Array|string,
+			publicKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<string>;
 
 		/** Signs message with privateKey and returns combined message. */
-		sign (message: Uint8Array|string, privateKey: Uint8Array) : Promise<Uint8Array>;
+		sign (
+			message: Uint8Array|string,
+			privateKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<Uint8Array>;
 
 		/** Signs message with privateKey and returns combined message encoded as base64. */
-		signBase64 (message: Uint8Array|string, privateKey: Uint8Array) : Promise<string>;
+		signBase64 (
+			message: Uint8Array|string,
+			privateKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<string>;
 
 		/** Signs message with privateKey and returns signature. */
-		signDetached (message: Uint8Array|string, privateKey: Uint8Array) : Promise<Uint8Array>;
+		signDetached (
+			message: Uint8Array|string,
+			privateKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<Uint8Array>;
 
 		/** Signs message with privateKey and returns signature encoded as base64. */
-		signDetachedBase64 (message: Uint8Array|string, privateKey: Uint8Array) : Promise<string>;
+		signDetachedBase64 (
+			message: Uint8Array|string,
+			privateKey: Uint8Array,
+			additionalData?: Uint8Array|string
+		) : Promise<string>;
 
 		/** Verifies detached signature against publicKey. */
 		verifyDetached (
 			signature: Uint8Array|string,
 			message: Uint8Array|string,
-			publicKey: Uint8Array
+			publicKey: Uint8Array,
+			additionalData?: Uint8Array|string
 		) : Promise<boolean>;
 	}
 
