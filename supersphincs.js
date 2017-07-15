@@ -427,6 +427,18 @@ var superSphincs	= {
 		privateKey,
 		additionalData
 	) { return initiated.then(function () {
+		if (
+			additionalData === undefined &&
+			typeof console !== 'undefined' &&
+			typeof console.warn === 'function'
+		) {
+			console.warn(
+				'If possible, `additionalData` should be specified as at least' +
+				'`new Uint8Array(0)`. See here for clarification: ' +
+				'https://github.com/cyph/supersphincs/blob/8337ad7/supersphincs.js#L307'
+			);
+		}
+
 		return superSphincs.hash(message, undefined, additionalData).then(function (hash) {
 			return Promise.all([
 				hash,
