@@ -433,7 +433,7 @@ var superSphincs	= {
 			typeof console.warn === 'function'
 		) {
 			console.warn(
-				'If possible, `additionalData` should be specified as at least' +
+				'If possible, `additionalData` should be specified as at least ' +
 				'`new Uint8Array(0)`. See here for clarification: ' +
 				'https://github.com/cyph/supersphincs/blob/8337ad7/supersphincs.js#L307'
 			);
