@@ -19,6 +19,41 @@ if (isNode) {
 }
 
 
+function hashInternal (message, shouldClearMessage) {
+	return Promise.resolve().then(function () {
+		if (message === undefined) {
+			message	= new Uint8Array(0);
+		}
+		if (!ArrayBuffer.isView(message)) {
+			throw new Error('Cannot hash invalid input.');
+		}
+
+		if (isNode) {
+			var hasher	= nodeCrypto.createHash('sha512');
+			hasher.update(Buffer.from(message));
+
+			return hasher.digest();
+		}
+		else {
+			return crypto.subtle.digest(
+				{
+					name: 'SHA-512'
+				},
+				message
+			);
+		}
+	}).then(function (hash) {
+		return new Uint8Array(hash);
+	}).catch(function () {
+		return sha512(message);
+	}).then(function (hash) {
+		if (shouldClearMessage) {
+			sodiumUtil.memzero(message);
+		}
+		return hash;
+	});
+}
+
 function deriveEncryptionKey (password, salt) {
 	if (isNode) {
 		return new Promise(function (resolve, reject) {
@@ -265,69 +300,56 @@ var superSphincs	= {
 	hashBytes: Promise.resolve(64),
 
 	hash: function (message, onlyBinary, additionalData) { return initiated.then(function () {
-		var shouldClearMessage	= typeof message === 'string';
+		var shouldClearAdditionalData	= typeof additionalData === 'string';
+		var shouldClearMessage			= typeof message === 'string';
 
 		return Promise.resolve().then(function () {
+			/*
+				For backwards-compatibility with existing signatures,
+				additionalDataHash is omitted when additionalData is
+				undefined.
+
+				This means that a message signed with addtional data
+				will have an identical signature to the concatenation
+				of its hash and its additional data's hash without
+				additional data.
+
+				Therefore, non-additional-data signing should be
+				considered deprecated for now, and subject to removal
+				in a future major release. Once it's removed, an
+				undefined additionalData argument will be treated as
+				equivalent to an empty byte array.
+			*/
+			return additionalData === undefined ?
+				new Uint8Array(0) :
+				hashInternal(sodiumUtil.from_string(additionalData), shouldClearAdditionalData)
+			;
+		}).then(function (additionalDataHash) {
 			message	= sodiumUtil.from_string(message);
 
-			if (isNode) {
-				var hasher	= nodeCrypto.createHash('sha512');
-				hasher.update(Buffer.from(message));
-
-				return hasher.digest();
+			var fullMessage, hash;
+			if (additionalDataHash.length < 1) {
+				fullMessage	= message;
 			}
 			else {
-				return crypto.subtle.digest(
-					{
-						name: 'SHA-512'
-					},
-					message
-				);
+				fullMessage	= new Uint8Array(additionalDataHash.length + message.length);
+				fullMessage.set(additionalDataHash);
+				fullMessage.set(message, additionalDataHash.length);
+				sodiumUtil.memzero(additionalDataHash);
 			}
+
+			return hashInternal(fullMessage, fullMessage !== message);
 		}).then(function (hash) {
 			if (shouldClearMessage) {
 				sodiumUtil.memzero(message);
 			}
 
-			var binary	= new Uint8Array(hash);
-
-			if (onlyBinary || additionalData !== undefined) {
-				return binary;
-			}
-
-			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
-		}).catch(function () {
-			if (shouldClearMessage) {
-				sodiumUtil.memzero(message);
-			}
-
-			var binary	= sha512(message);
-
-			if (onlyBinary || additionalData !== undefined) {
-				return binary;
-			}
-
-			return {binary: binary, hex: sodiumUtil.to_hex(binary)};
-		}).then(function (hash) {
-			if (additionalData === undefined) {
+			if (onlyBinary) {
 				return hash;
 			}
-
-			var shouldClearAdditionalData	= typeof additionalData === 'string';
-			additionalData					= sodiumUtil.from_string(additionalData);
-
-			var additionalDataMessage	= new Uint8Array(
-				additionalData.length + hash.length
-			);
-			additionalDataMessage.set(additionalData);
-			additionalDataMessage.set(hash, additionalData.length);
-
-			sodiumUtil.memzero(hash);
-			if (shouldClearAdditionalData) {
-				sodiumUtil.memzero(additionalData);
+			else {
+				return {binary: hash, hex: sodiumUtil.to_hex(hash)};
 			}
-
-			return superSphincs.hash(additionalDataMessage, onlyBinary);
 		});
 	}); },
 
