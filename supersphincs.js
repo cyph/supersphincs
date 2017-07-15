@@ -322,6 +322,7 @@ var superSphincs	= {
 			additionalDataMessage.set(additionalData);
 			additionalDataMessage.set(hash, additionalData.length);
 
+			sodiumUtil.memzero(hash);
 			if (shouldClearAdditionalData) {
 				sodiumUtil.memzero(additionalData);
 			}
