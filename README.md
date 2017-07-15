@@ -24,21 +24,26 @@ where available or an efficient JavaScript implementation from
 		/* Combined signatures */
 
 		const signed /*: Uint8Array */ =
-			await superSphincs.sign(message, keyPair.privateKey)
+			await superSphincs.sign(message, keyPair.privateKey, new Uint8Array(0))
 		;
 
 		const verified /*: Uint8Array */ =
-			await superSphincs.open(signed, keyPair.publicKey) // same as message
+			await superSphincs.open(signed, keyPair.publicKey, new Uint8Array(0)) // same as message
 		;
 
 		/* Detached signatures */
 		
 		const signature /*: Uint8Array */ =
-			await superSphincs.signDetached(message, keyPair.privateKey)
+			await superSphincs.signDetached(message, keyPair.privateKey, new Uint8Array(0))
 		;
 
 		const isValid /*: boolean */ =
-			await superSphincs.verifyDetached(signature, message, keyPair.publicKey) // true
+			await superSphincs.verifyDetached(
+				signature,
+				message,
+				keyPair.publicKey,
+				new Uint8Array(0)
+			) // true
 		;
 
 		/* Export and optionally encrypt keys */
