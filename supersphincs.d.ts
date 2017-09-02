@@ -143,14 +143,16 @@ declare module 'supersphincs' {
 		signDetached (
 			message: Uint8Array|string,
 			privateKey: Uint8Array,
-			additionalData?: Uint8Array|string
+			additionalData?: Uint8Array|string,
+			preHashed?: boolean
 		) : Promise<Uint8Array>;
 
 		/** Signs message with privateKey and returns signature encoded as base64. */
 		signDetachedBase64 (
 			message: Uint8Array|string,
 			privateKey: Uint8Array,
-			additionalData?: Uint8Array|string
+			additionalData?: Uint8Array|string,
+			preHashed?: boolean
 		) : Promise<string>;
 
 		/** Verifies detached signature against publicKey. */

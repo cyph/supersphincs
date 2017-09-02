@@ -19,6 +19,9 @@ if (isNode) {
 }
 
 
+var hashBytes	= 64;
+
+
 function hashInternal (message, shouldClearMessage) {
 	return Promise.resolve().then(function () {
 		if (message === undefined) {
@@ -297,13 +300,24 @@ var superSphincs	= {
 	publicKeyBytes: initiated.then(function () { return publicKeyBytes; }),
 	privateKeyBytes: initiated.then(function () { return privateKeyBytes; }),
 	bytes: initiated.then(function () { return bytes; }),
-	hashBytes: Promise.resolve(64),
+	hashBytes: Promise.resolve(hashBytes),
 
-	hash: function (message, onlyBinary, additionalData) { return initiated.then(function () {
+	hash: function (
+		message,
+		onlyBinary,
+		additionalData,
+		preHashed
+	) { return initiated.then(function () {
 		var shouldClearAdditionalData	= typeof additionalData === 'string';
 		var shouldClearMessage			= typeof message === 'string';
 
 		return Promise.resolve().then(function () {
+			message	= sodiumUtil.from_string(message);
+
+			if (preHashed && message.length !== hashBytes) {
+				throw new Error('Invalid pre-hashed message.');
+			}
+
 			/*
 				For backwards-compatibility with existing signatures,
 				additionalDataHash is omitted when additionalData is
@@ -320,25 +334,31 @@ var superSphincs	= {
 				undefined additionalData argument will be treated as
 				equivalent to an empty byte array.
 			*/
-			return additionalData === undefined ?
-				new Uint8Array(0) :
-				hashInternal(sodiumUtil.from_string(additionalData), shouldClearAdditionalData)
-			;
-		}).then(function (additionalDataHash) {
-			message	= sodiumUtil.from_string(message);
+			return Promise.all([
+				additionalData === undefined ?
+					undefined :
+					hashInternal(sodiumUtil.from_string(additionalData), shouldClearAdditionalData)
+				,
+				preHashed ? message : hashInternal(message)
+			]);
+		}).then(function (results) {
+			var additionalDataHash	= results[0];
+			var messageToHash		= results[1];
 
-			var fullMessage, hash;
-			if (additionalDataHash.length < 1) {
-				fullMessage	= message;
-			}
-			else {
-				fullMessage	= new Uint8Array(additionalDataHash.length + message.length);
-				fullMessage.set(additionalDataHash);
-				fullMessage.set(message, additionalDataHash.length);
-				sodiumUtil.memzero(additionalDataHash);
+			if (!additionalDataHash) {
+				return messageToHash;
 			}
 
-			return hashInternal(fullMessage, fullMessage !== message);
+			var fullMessage	= new Uint8Array(additionalDataHash.length + hashBytes);
+			fullMessage.set(additionalDataHash);
+			fullMessage.set(messageToHash, additionalDataHash.length);
+			sodiumUtil.memzero(additionalDataHash);
+
+			if (!preHashed) {
+				sodiumUtil.memzero(messageToHash);
+			}
+
+			return hashInternal(fullMessage, true);
 		}).then(function (hash) {
 			if (shouldClearMessage) {
 				sodiumUtil.memzero(message);
@@ -425,7 +445,8 @@ var superSphincs	= {
 	signDetached: function (
 		message,
 		privateKey,
-		additionalData
+		additionalData,
+		preHashed
 	) { return initiated.then(function () {
 		if (
 			additionalData === undefined &&
@@ -439,7 +460,7 @@ var superSphincs	= {
 			);
 		}
 
-		return superSphincs.hash(message, undefined, additionalData).then(function (hash) {
+		return superSphincs.hash(message, false, additionalData, preHashed).then(function (hash) {
 			return Promise.all([
 				hash,
 				rsaSign.signDetached(
@@ -479,12 +500,14 @@ var superSphincs	= {
 	signDetachedBase64: function (
 		message,
 		privateKey,
-		additionalData
+		additionalData,
+		preHashed
 	) { return initiated.then(function () {
 			return superSphincs.signDetached(
 				message,
 				privateKey,
-				additionalData
+				additionalData,
+				preHashed
 			).then(function (signature) {
 				var s	= sodiumUtil.to_base64(signature);
 				sodiumUtil.memzero(signature);
@@ -555,7 +578,7 @@ var superSphincs	= {
 	) { return initiated.then(function () {
 		var shouldClearSignature	= typeof signature === 'string';
 
-		return superSphincs.hash(message, undefined, additionalData).then(function (hash) {
+		return superSphincs.hash(message, false, additionalData).then(function (hash) {
 			signature	= sodiumUtil.from_base64(signature);
 
 			return Promise.all([

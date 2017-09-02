@@ -132,6 +132,10 @@ where available or an efficient JavaScript implementation from
 
 Breaking changes in major versions:
 
+5.0.0:
+
+* Additional data format change.
+
 4.0.0:
 
 * As part of upgrading from asm.js to WebAssembly (with asm.js included as a fallback),
