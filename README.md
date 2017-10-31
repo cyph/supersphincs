@@ -18,23 +18,30 @@ where available or an efficient JavaScript implementation from
 		;
 
 		const message /*: Uint8Array */ =
-			new Uint8Array([104, 101, 108, 108, 111, 0]) // "hello"
+			new Uint8Array([104, 101, 108, 108, 111]) // "hello"
+		;
+
+		// Optional additional data argument, similar conceptually to what AEAD ciphers support.
+		// If specified, must be the same when signing and verifying. For more information and
+		// usage advice, see: https://download.libsodium.org/doc/secret-key_cryptography/aead.html
+		const additionalData /*: Uint8Array */ =
+			new Uint8Array([119, 111, 114, 108, 100]) // "world"
 		;
 
 		/* Combined signatures */
 
 		const signed /*: Uint8Array */ =
-			await superSphincs.sign(message, keyPair.privateKey, new Uint8Array(0))
+			await superSphincs.sign(message, keyPair.privateKey, additionalData)
 		;
 
 		const verified /*: Uint8Array */ =
-			await superSphincs.open(signed, keyPair.publicKey, new Uint8Array(0)) // same as message
+			await superSphincs.open(signed, keyPair.publicKey, additionalData) // same as message
 		;
 
 		/* Detached signatures */
 		
 		const signature /*: Uint8Array */ =
-			await superSphincs.signDetached(message, keyPair.privateKey, new Uint8Array(0))
+			await superSphincs.signDetached(message, keyPair.privateKey, additionalData)
 		;
 
 		const isValid /*: boolean */ =
@@ -42,7 +49,7 @@ where available or an efficient JavaScript implementation from
 				signature,
 				message,
 				keyPair.publicKey,
-				new Uint8Array(0)
+				additionalData
 			) // true
 		;
 
