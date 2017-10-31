@@ -318,36 +318,16 @@ var superSphincs	= {
 				throw new Error('Invalid pre-hashed message.');
 			}
 
-			/*
-				For backwards-compatibility with existing signatures,
-				additionalDataHash is omitted when additionalData is
-				undefined.
-
-				This means that a message signed with addtional data
-				will have an identical signature to the concatenation
-				of its hash and its additional data's hash without
-				additional data.
-
-				Therefore, non-additional-data signing should be
-				considered deprecated for now, and subject to removal
-				in a future major release. Once it's removed, an
-				undefined additionalData argument will be treated as
-				equivalent to an empty byte array.
-			*/
 			return Promise.all([
-				additionalData === undefined ?
-					undefined :
-					hashInternal(sodiumUtil.from_string(additionalData), shouldClearAdditionalData)
-				,
+				hashInternal(
+					additionalData ? sodiumUtil.from_string(additionalData) : new Uint8Array(0),
+					shouldClearAdditionalData
+				),
 				preHashed ? message : hashInternal(message)
 			]);
 		}).then(function (results) {
 			var additionalDataHash	= results[0];
 			var messageToHash		= results[1];
-
-			if (!additionalDataHash) {
-				return messageToHash;
-			}
 
 			var fullMessage	= new Uint8Array(additionalDataHash.length + hashBytes);
 			fullMessage.set(additionalDataHash);
@@ -448,18 +428,6 @@ var superSphincs	= {
 		additionalData,
 		preHashed
 	) { return initiated.then(function () {
-		if (
-			additionalData === undefined &&
-			typeof console !== 'undefined' &&
-			typeof console.warn === 'function'
-		) {
-			console.warn(
-				'If possible, `additionalData` should be specified as at least ' +
-				'`new Uint8Array(0)`. See here for clarification: ' +
-				'https://github.com/cyph/supersphincs/blob/8337ad7/supersphincs.js#L307'
-			);
-		}
-
 		return superSphincs.hash(message, false, additionalData, preHashed).then(function (hash) {
 			return Promise.all([
 				hash,

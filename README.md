@@ -132,6 +132,10 @@ where available or an efficient JavaScript implementation from
 
 Breaking changes in major versions:
 
+6.0.0:
+
+* Additional data optional with default value of `new Uint8Array(0)`.
+
 5.0.0:
 
 * Additional data format change.
