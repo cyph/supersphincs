@@ -14,7 +14,7 @@ all:
 			self.superSphincs	= superSphincs; \
 		} \
 	" >> dist/supersphincs.js
-	uglifyjs dist/supersphincs.js -cmo dist/supersphincs.js
+	terser dist/supersphincs.js -cmo dist/supersphincs.js
 
 	rm -rf node_modules package-lock.json
 
