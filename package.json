@@ -1,6 +1,6 @@
 {
 	"name": "supersphincs",
-	"version": "6.1.4",
+	"version": "6.2.0-next",
 	"description": "SPHINCS and RSASSA-PKCS1-v1_5 paired together as a single signing scheme",
 	"main": "supersphincs.js",
 	"types": "./supersphincs.d.ts",
@@ -22,8 +22,8 @@
 		"url": "https://github.com/cyph/supersphincs/issues"
 	},
 	"dependencies": {
-		"rsasign": "*",
+		"rsasign": "next",
 		"sodiumutil": "*",
-		"sphincs": "*"
+		"sphincs": "next"
 	}
 }
