@@ -516,7 +516,12 @@ var superSphincs	= {
 		});
 	},
 
-	open: function (signed, publicKey, additionalData) { return initiated.then(function () {
+	open: function (
+		signed,
+		publicKey,
+		additionalData,
+		knownGoodHash
+	) { return initiated.then(function () {
 		var shouldClearSigned	= typeof signed === 'string';
 
 		return Promise.resolve().then(function () {
@@ -537,7 +542,8 @@ var superSphincs	= {
 				signature,
 				message,
 				publicKey,
-				additionalData
+				additionalData,
+				knownGoodHash
 			)]);
 		}).then(function (results) {
 			var message	= new Uint8Array(results[0]);
@@ -562,8 +568,18 @@ var superSphincs	= {
 		});
 	}); },
 
-	openString: function (signed, publicKey, additionalData) { return initiated.then(function () {
-		return superSphincs.open(signed, publicKey, additionalData).then(function (message) {
+	openString: function (
+		signed,
+		publicKey,
+		additionalData,
+		knownGoodHash
+	) { return initiated.then(function () {
+		return superSphincs.open(
+			signed,
+			publicKey,
+			additionalData,
+			knownGoodHash
+		).then(function (message) {
 			var s	= sodiumUtil.to_string(message);
 			sodiumUtil.memzero(message);
 			return s;
@@ -574,29 +590,56 @@ var superSphincs	= {
 		signature,
 		message,
 		publicKey,
-		additionalData
+		additionalData,
+		knownGoodHash
 	) { return initiated.then(function () {
 		var shouldClearSignature	= typeof signature === 'string';
 
 		return superSphincs.hash(message, false, additionalData).then(function (hash) {
 			signature	= sodiumUtil.from_base64(signature);
 
+			var shouldClearKnownGoodHash	= false;
+			if (typeof knownGoodHash === 'string' && knownGoodHash.length > 0) {
+				knownGoodHash				= sodiumUtil.from_hex(knownGoodHash);
+				shouldClearKnownGoodHash	= true;
+			}
+			var hashAlreadyVerified	=
+				knownGoodHash instanceof Uint8Array &&
+				knownGoodHash.length > 0 &&
+				sodiumUtil.memcmp(hash, knownGoodHash)
+			;
+			if (shouldClearKnownGoodHash) {
+				sodiumUtil.memzero(knownGoodHash);
+			}
+
+			var publicKeyPromise	=
+				hashAlreadyVerified ?
+					undefined :
+				publicKey instanceof Uint8Array ?
+					Promise.resolve(publicKey) :
+					superSphincs.importKeys(publicKey)
+			;
+
 			return Promise.all([
 				hash,
-				rsaSign.verifyDetached(
-					new Uint8Array(signature.buffer, signature.byteOffset, rsaSign.bytes),
-					hash.binary,
-					new Uint8Array(publicKey.buffer, publicKey.byteOffset, rsaSign.publicKeyBytes)
-				),
-				sphincs.verifyDetached(
-					new Uint8Array(
-						signature.buffer,
-						signature.byteOffset + rsaSign.bytes,
-						sphincsBytes.bytes
-					),
-					hash.binary,
-					new Uint8Array(publicKey.buffer, publicKey.byteOffset + rsaSign.publicKeyBytes)
-				)
+				hashAlreadyVerified || publicKeyPromise.then(function (pk) {
+					return rsaSign.verifyDetached(
+						new Uint8Array(signature.buffer, signature.byteOffset, rsaSign.bytes),
+						hash.binary,
+						new Uint8Array(pk.buffer, pk.byteOffset, rsaSign.publicKeyBytes)
+					);
+				}),
+				hashAlreadyVerified || publicKeyPromise.then(function (pk) {
+					return sphincs.verifyDetached(
+						new Uint8Array(
+							signature.buffer,
+							signature.byteOffset + rsaSign.bytes,
+							sphincsBytes.bytes
+						),
+						hash.binary,
+						new Uint8Array(pk.buffer, pk.byteOffset + rsaSign.publicKeyBytes)
+					);
+				})
 			]);
 		}).then(function (results) {
 			var hash			= results[0];
