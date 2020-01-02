@@ -764,11 +764,7 @@ var superSphincs	= {
 
 	importKeys: function (keyData, password) {
 		return initiated.then(function () {
-			if (!keyData.private) {
-				return null;
-			}
-
-			if (keyData.private.superSphincs) {
+			if (keyData.private && typeof keyData.private.superSphincs === 'string') {
 				var superSphincsPrivateKey	= sodiumUtil.from_base64(keyData.private.superSphincs);
 
 				if (password) {
@@ -778,7 +774,11 @@ var superSphincs	= {
 					return [superSphincsPrivateKey];
 				}
 			}
-			else {
+			else if (
+				keyData.private &&
+				typeof keyData.private.rsa === 'string' &&
+				typeof keyData.private.sphincs === 'string'
+			) {
 				var rsaPrivateKey		= sodiumUtil.from_base64(keyData.private.rsa);
 				var sphincsPrivateKey	= sodiumUtil.from_base64(keyData.private.sphincs);
 
@@ -797,6 +797,8 @@ var superSphincs	= {
 				else {
 					return [rsaPrivateKey, sphincsPrivateKey];
 				}
+
+				return null;
 			}
 		}).then(function (results) {
 			var keyPair	= {
