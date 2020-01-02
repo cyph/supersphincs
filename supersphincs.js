@@ -485,7 +485,8 @@ var superSphincs	= {
 		signed,
 		publicKey,
 		additionalData,
-		knownGoodHash
+		knownGoodHash,
+		includeHash
 	) { return initiated.then(function () {
 		var shouldClearSigned	= typeof signed === 'string';
 
@@ -508,18 +509,20 @@ var superSphincs	= {
 				message,
 				publicKey,
 				additionalData,
-				knownGoodHash
+				knownGoodHash,
+				includeHash
 			)]);
 		}).then(function (results) {
 			var message	= new Uint8Array(results[0]);
-			var isValid	= results[1];
+			var hash	= includeHash ? results[1].hash : undefined;
+			var isValid	= includeHash ? results[1].valid : results[1];
 
 			if (shouldClearSigned) {
 				sodiumUtil.memzero(signed);
 			}
 
 			if (isValid) {
-				return message;
+				return includeHash ? {hash: hash, message: message} : message;
 			}
 			else {
 				throw new Error('Failed to open SuperSPHINCS signed message.');
@@ -537,17 +540,28 @@ var superSphincs	= {
 		signed,
 		publicKey,
 		additionalData,
-		knownGoodHash
+		knownGoodHash,
+		includeHash
 	) { return initiated.then(function () {
 		return superSphincs.open(
 			signed,
 			publicKey,
 			additionalData,
-			knownGoodHash
+			knownGoodHash,
+			includeHash
 		).then(function (message) {
+			var hash	= undefined;
+
+			if (includeHash) {
+				hash	= sodiumUtil.to_hex(message.hash);
+				sodiumUtil.memzero(message.hash);
+				message	= message.message;
+			}
+
 			var s	= sodiumUtil.to_string(message);
 			sodiumUtil.memzero(message);
-			return s;
+
+			return includeHash ? {hash: hash, message: s} : s;
 		});
 	}); },
 
@@ -556,7 +570,8 @@ var superSphincs	= {
 		message,
 		publicKey,
 		additionalData,
-		knownGoodHash
+		knownGoodHash,
+		includeHash
 	) { return initiated.then(function () {
 		var shouldClearSignature	= typeof signature === 'string';
 
@@ -612,14 +627,19 @@ var superSphincs	= {
 			var hash			= results[0];
 			var rsaIsValid		= results[1];
 			var sphincsIsValid	= results[2];
+			var valid			= rsaIsValid && sphincsIsValid;
 
 			if (shouldClearSignature) {
 				sodiumUtil.memzero(signature);
 			}
 
+			if (includeHash) {
+				return {hash: hash, valid: valid};
+			}
+
 			sodiumUtil.memzero(hash);
 
-			return rsaIsValid && sphincsIsValid;
+			return valid;
 		}).catch(function (err) {
 			if (shouldClearSignature) {
 				sodiumUtil.memzero(signature);

@@ -94,6 +94,20 @@ declare module 'supersphincs' {
 			knownGoodHash?: Uint8Array|string
 		) : Promise<Uint8Array>;
 
+		/** Verifies signed message against publicKey and returns it. */
+		open (
+			signed: Uint8Array|string,
+			publicKey: Uint8Array|{
+				public: {rsa: string; sphincs: string}|{superSphincs: string}
+			},
+			additionalData?: Uint8Array|string,
+			knownGoodHash?: Uint8Array|string,
+			includeHash: true
+		) : Promise<{
+			hash: Uint8Array;
+			message: Uint8Array;
+		}>;
+
 		/** Verifies signed message against publicKey and returns it decoded to a string. */
 		openString (
 			signed: Uint8Array|string,
@@ -103,6 +117,20 @@ declare module 'supersphincs' {
 			additionalData?: Uint8Array|string,
 			knownGoodHash?: Uint8Array|string
 		) : Promise<string>;
+
+		/** Verifies signed message against publicKey and returns it decoded to a string. */
+		openString (
+			signed: Uint8Array|string,
+			publicKey: Uint8Array|{
+				public: {rsa: string; sphincs: string}|{superSphincs: string}
+			},
+			additionalData?: Uint8Array|string,
+			knownGoodHash?: Uint8Array|string,
+			includeHash: true
+		) : Promise<{
+			hash: string;
+			message: Uint8Array;
+		}>;
 
 		/** Signs message with privateKey and returns combined message. */
 		sign (
@@ -144,6 +172,21 @@ declare module 'supersphincs' {
 			additionalData?: Uint8Array|string,
 			knownGoodHash?: Uint8Array|string
 		) : Promise<boolean>;
+
+		/** Verifies detached signature against publicKey. */
+		verifyDetached (
+			signature: Uint8Array|string,
+			message: Uint8Array|string,
+			publicKey: Uint8Array|{
+				public: {rsa: string; sphincs: string}|{superSphincs: string}
+			},
+			additionalData?: Uint8Array|string,
+			knownGoodHash?: Uint8Array|string,
+			includeHash: true
+		) : Promise<{
+			hash: Uint8Array;
+			valid: boolean;
+		}>;
 	}
 
 	const superSphincs: ISuperSphincs;
