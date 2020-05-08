@@ -100,9 +100,9 @@ declare module 'supersphincs' {
 			publicKey: Uint8Array|{
 				public: {rsa: string; sphincs: string}|{superSphincs: string}
 			},
+			includeHash: true,
 			additionalData?: Uint8Array|string,
-			knownGoodHash?: Uint8Array|string,
-			includeHash?: true
+			knownGoodHash?: Uint8Array|string
 		) : Promise<{
 			hash: Uint8Array;
 			message: Uint8Array;
@@ -124,9 +124,9 @@ declare module 'supersphincs' {
 			publicKey: Uint8Array|{
 				public: {rsa: string; sphincs: string}|{superSphincs: string}
 			},
+			includeHash: true,
 			additionalData?: Uint8Array|string,
-			knownGoodHash?: Uint8Array|string,
-			includeHash?: true
+			knownGoodHash?: Uint8Array|string
 		) : Promise<{
 			hash: string;
 			message: Uint8Array;
@@ -180,9 +180,9 @@ declare module 'supersphincs' {
 			publicKey: Uint8Array|{
 				public: {rsa: string; sphincs: string}|{superSphincs: string}
 			},
+			includeHash: true,
 			additionalData?: Uint8Array|string,
-			knownGoodHash?: Uint8Array|string,
-			includeHash?: true
+			knownGoodHash?: Uint8Array|string
 		) : Promise<{
 			hash: Uint8Array;
 			valid: boolean;
