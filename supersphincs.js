@@ -484,9 +484,9 @@ var superSphincs	= {
 	open: function (
 		signed,
 		publicKey,
+		includeHash,
 		additionalData,
 		knownGoodHash,
-		includeHash
 	) { return initiated.then(function () {
 		var shouldClearSigned	= typeof signed === 'string';
 
@@ -508,9 +508,9 @@ var superSphincs	= {
 				signature,
 				message,
 				publicKey,
+				includeHash,
 				additionalData,
-				knownGoodHash,
-				includeHash
+				knownGoodHash
 			)]);
 		}).then(function (results) {
 			var message	= new Uint8Array(results[0]);
@@ -539,16 +539,16 @@ var superSphincs	= {
 	openString: function (
 		signed,
 		publicKey,
+		includeHash,
 		additionalData,
-		knownGoodHash,
-		includeHash
+		knownGoodHash
 	) { return initiated.then(function () {
 		return superSphincs.open(
 			signed,
 			publicKey,
+			includeHash,
 			additionalData,
-			knownGoodHash,
-			includeHash
+			knownGoodHash
 		).then(function (message) {
 			var hash	= undefined;
 
@@ -569,9 +569,9 @@ var superSphincs	= {
 		signature,
 		message,
 		publicKey,
+		includeHash, 
 		additionalData,
-		knownGoodHash,
-		includeHash
+		knownGoodHash
 	) { return initiated.then(function () {
 		var shouldClearSignature	= typeof signature === 'string';
 
