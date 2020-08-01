@@ -332,6 +332,7 @@ var initiated	= Promise.all([
 
 
 var superSphincs	= {
+	_sodiumUtil: sodiumUtil,
 	publicKeyBytes: initiated.then(function () { return publicKeyBytes; }),
 	privateKeyBytes: initiated.then(function () { return privateKeyBytes; }),
 	bytes: initiated.then(function () { return bytes; }),
